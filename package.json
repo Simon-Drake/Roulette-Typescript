@@ -1,0 +1,11 @@
+{
+  "name": "random_roulette",
+  "version": "1.0.0",
+  "description": "Game of chance built with HTML5 Canvas and TypeScript",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Simon Drake",
+  "dependencies": {}
+}
