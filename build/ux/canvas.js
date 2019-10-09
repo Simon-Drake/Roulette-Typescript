@@ -1,42 +1,41 @@
 export class Canvas {
-    // Do I need el?
     static init(el) {
-        Canvas.resizeCanvas(el);
-        window.addEventListener('resize', function () { Canvas.resizeCanvas(el); }, false);
+        Canvas.sizeCanvas(el);
+        window.addEventListener('resize', function () { Canvas.sizeCanvas(el); }, false);
         Canvas.context = el.getContext("2d");
     }
-    static resizeCanvas(el) {
-        console.log("passing here");
-        // ? things
+    static sizeCanvas(el) {
+        // If the browser is large enough scale the canvas to its maximum dimensions.
         if (document.body.clientWidth > this.maxWidth && window.innerHeight > this.maxHeight) {
             el.width = Canvas.maxWidth;
-            console.log("passing here2");
             Canvas.width = Canvas.maxWidth;
             el.height = Canvas.maxHeight;
             Canvas.height = Canvas.maxHeight;
         }
         else {
-            //change canvas to this ? or this to canvas?
-            // find smallest ratio - which one you have to scale to
-            // Save as constants
-            if (document.body.clientWidth < this.maxWidth) {
-                el.width = document.body.clientWidth * 0.95;
-                Canvas.width = document.body.clientWidth * 0.95;
-                el.height = Canvas.width * 0.68;
-                Canvas.height = Canvas.width * 0.68;
-            }
-            else {
-                el.height = document.body.clientHeight * 0.95;
-                Canvas.height = document.body.clientHeight * 0.95;
-                el.width = Canvas.height * 1.47;
-                Canvas.width = Canvas.height * 1.47;
-            }
+            // If both width and height are smaller than max determine which ratio is smallest and rescale accordingly.
+            // Else if its just width than scale to width otherwise its height and scale to height. 
+            document.body.clientWidth < this.maxWidth && document.body.clientHeight < this.maxHeight
+                ? document.body.clientWidth / this.maxWidth <= document.body.clientHeight / this.maxHeight
+                    ? Canvas.scaleToWidth(el)
+                    : Canvas.scaleToHeight(el)
+                : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(el) : Canvas.scaleToHeight(el);
         }
         Canvas.drawImages();
-        console.log(document.body.clientWidth);
+    }
+    static scaleToWidth(el) {
+        el.width = document.body.clientWidth * 0.95;
+        Canvas.width = document.body.clientWidth * 0.95;
+        el.height = Canvas.width * this.heightToWidthRatio;
+        Canvas.height = Canvas.width * this.heightToWidthRatio;
+    }
+    static scaleToHeight(el) {
+        el.height = document.body.clientHeight * 0.95;
+        Canvas.height = document.body.clientHeight * 0.95;
+        el.width = Canvas.height * this.widthToHeightRatio;
+        Canvas.width = Canvas.height * this.widthToHeightRatio;
     }
     static drawImages() {
-        console.log("passing here3");
         var image = new Image();
         image.src = '../../images/background_safe_minigame.png';
         image.onload = () => {
@@ -67,6 +66,8 @@ export class Canvas {
 }
 Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
+Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
+Canvas.heightToWidthRatio = Canvas.maxHeight / Canvas.maxWidth;
 // How far left is it, how far down, 
 Canvas.ratios = {
     "safe1": [(50 / Canvas.maxWidth), (180 / Canvas.maxHeight)]
