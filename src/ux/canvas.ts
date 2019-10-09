@@ -20,14 +20,18 @@ export abstract class Canvas {
         "safe8" : [(220/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "safe9" : [(390/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "screen" : [(578/Canvas.maxWidth), (183/Canvas.maxHeight)],
-        "supportDial" : [(582/Canvas.maxWidth), (280/Canvas.maxHeight)]
-
+        "supportDial" : [(582/Canvas.maxWidth), (280/Canvas.maxHeight)],
+        "lights" : [(582/Canvas.maxWidth), (270/Canvas.maxHeight)]
     }
+    public static lights: HTMLImageElement = new Image()
 
     public static init(el: HTMLCanvasElement) {
         Canvas.sizeCanvas(el)
         window.addEventListener('resize', function(){Canvas.sizeCanvas(el)}, false)
         Canvas.context = el.getContext("2d");
+
+        this.lights.src = '../../images/leds_safe_dial_minigame.png'
+
     }
 
     public static sizeCanvas(el: HTMLCanvasElement) {
@@ -102,13 +106,18 @@ export abstract class Canvas {
             Canvas.context.drawImage(supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, supportDial.width*shrinkFactor, supportDial.height*shrinkFactor);
         }
 
-        // const image2 = new Image()
-        // image2.src = '../../images/safe_open_minigame.png'
-        // image2.onload = () => {
-        //     Canvas.context.drawImage(image2, unit*1.3,  unit*4, safe.width, safe.height);
-        //     Canvas.context.drawImage(image2, unit*1.3,  unit*7);
-        //     Canvas.context.drawImage(image2, unit*1.3,  unit*10);
-        // }
-    }
+        //Testing custom event making
+        supportDial.addEventListener('redraw', function(e){
+            console.log("triggered i think")
+        })
+        let event = new CustomEvent('redraw')
+        supportDial.dispatchEvent(event)
 
+        // doesnt redraw on browser resize
+        // needs to reload the image
+        // Should only call drawImage each time the broswer is rezised
+        this.lights.onload = () => {
+            Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
+        }
+    }
 }
