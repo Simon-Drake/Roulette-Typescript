@@ -1,9 +1,13 @@
 export class Canvas {
     static init(el) {
+        this.lights.src = '../../images/leds_safe_dial_minigame.png';
+        this.background.src = '../../images/background_safe_minigame.png';
+        this.safe.src = '../../images/safe_minigame.png';
+        this.screen.src = '../../images/screen_safe_minigame.png';
+        this.supportDial.src = '../../images/support_safe_dial_minigame.png';
         Canvas.sizeCanvas(el);
         window.addEventListener('resize', function () { Canvas.sizeCanvas(el); }, false);
         Canvas.context = el.getContext("2d");
-        this.lights.src = '../../images/leds_safe_dial_minigame.png';
     }
     static sizeCanvas(el) {
         // If the browser is large enough scale the canvas to its maximum dimensions.
@@ -22,7 +26,7 @@ export class Canvas {
                     : Canvas.scaleToHeight(el)
                 : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(el) : Canvas.scaleToHeight(el);
         }
-        Canvas.drawImages();
+        this.drawn ? Canvas.redrawImages() : Canvas.drawImages();
     }
     static scaleToWidth(el) {
         el.width = document.body.clientWidth * 0.95;
@@ -36,53 +40,66 @@ export class Canvas {
         el.width = Canvas.height * this.widthToHeightRatio;
         Canvas.width = Canvas.height * this.widthToHeightRatio;
     }
+    static redrawImages() {
+        const shrinkFactor = Canvas.width / Canvas.maxWidth;
+        Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
+        const widthFactor = this.safe.width * shrinkFactor;
+        const heightFactor = this.safe.height * shrinkFactor;
+        // Make a loop?
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe4"][0] * Canvas.width, Canvas.ratios["safe4"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe5"][0] * Canvas.width, Canvas.ratios["safe5"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe6"][0] * Canvas.width, Canvas.ratios["safe6"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * shrinkFactor, this.screen.height * shrinkFactor);
+        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * shrinkFactor, this.supportDial.height * shrinkFactor);
+        Canvas.context.drawImage(this.lights, 0, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights"][0] * Canvas.width, Canvas.ratios["lights"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
+    }
     static drawImages() {
         const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        const background = new Image();
-        background.src = '../../images/background_safe_minigame.png';
-        background.onload = () => {
-            Canvas.context.drawImage(background, 0, 0, Canvas.width, Canvas.height);
-        };
-        const safe = new Image();
-        safe.src = '../../images/safe_minigame.png';
-        safe.onload = () => {
-            const widthFactor = safe.width * shrinkFactor;
-            const heightFactor = safe.height * shrinkFactor;
+        // this.background.onload = () => {
+        //     // make a function for each draw?
+        //     Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
+        // }
+        this.safe.onload = () => {
+            const widthFactor = this.safe.width * shrinkFactor;
+            const heightFactor = this.safe.height * shrinkFactor;
             // Make a loop?
-            Canvas.context.drawImage(safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe4"][0] * Canvas.width, Canvas.ratios["safe4"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe5"][0] * Canvas.width, Canvas.ratios["safe5"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe6"][0] * Canvas.width, Canvas.ratios["safe6"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(safe, Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe4"][0] * Canvas.width, Canvas.ratios["safe4"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe5"][0] * Canvas.width, Canvas.ratios["safe5"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe6"][0] * Canvas.width, Canvas.ratios["safe6"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
+            Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
         };
-        const screen = new Image();
-        screen.src = '../../images/screen_safe_minigame.png';
-        screen.onload = () => {
-            Canvas.context.drawImage(screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, screen.width * shrinkFactor, screen.height * shrinkFactor);
+        this.screen.onload = () => {
+            Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * shrinkFactor, this.screen.height * shrinkFactor);
         };
-        const supportDial = new Image();
-        supportDial.src = '../../images/support_safe_dial_minigame.png';
-        supportDial.onload = () => {
-            Canvas.context.drawImage(supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, supportDial.width * shrinkFactor, supportDial.height * shrinkFactor);
+        this.supportDial.onload = () => {
+            Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * shrinkFactor, this.supportDial.height * shrinkFactor);
         };
-        //Testing custom event making
-        supportDial.addEventListener('redraw', function (e) {
-            console.log("triggered i think");
-        });
-        let event = new CustomEvent('redraw');
-        supportDial.dispatchEvent(event);
-        // doesnt redraw on browser resize
-        // needs to reload the image
-        // Should only call drawImage each time the broswer is rezised
+        // //Testing custom event making
+        // this.supportDial.addEventListener('redraw', function(e){
+        //     console.log("triggered i think")
+        // })
+        // let event = new CustomEvent('redraw')
+        // this.supportDial.dispatchEvent(event)
         this.lights.onload = () => {
-            Canvas.context.drawImage(this.lights, 0, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights"][0] * Canvas.width, Canvas.ratios["lights"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
+            console.log(this.lights.width);
+            console.log(this.lights.height);
+            Canvas.context.drawImage(this.lights, Canvas.ratios["lights"][0] * Canvas.width, Canvas.ratios["lights"][1] * Canvas.height, this.lights.width * shrinkFactor, this.lights.height * shrinkFactor);
         };
+        this.drawn = true;
     }
 }
+Canvas.drawn = false;
 Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
 Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
@@ -104,3 +121,7 @@ Canvas.ratios = {
     "lights": [(582 / Canvas.maxWidth), (270 / Canvas.maxHeight)]
 };
 Canvas.lights = new Image();
+Canvas.background = new Image();
+Canvas.safe = new Image();
+Canvas.screen = new Image();
+Canvas.supportDial = new Image();

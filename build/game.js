@@ -6,7 +6,9 @@ export class Game {
         Canvas.init(document.querySelector("canvas"));
     }
     static gameLoop(timestamp) {
-        Game.timeElapsed = timestamp / 1000;
+        // divide by a 100 and round to get 100 ms interval
+        Game.timeElapsed = timestamp;
+        // console.log(timestamp)
         requestAnimationFrame(Game.gameLoop);
     }
 }
