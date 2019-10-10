@@ -131,7 +131,6 @@ export abstract class Canvas {
 
     public static changeLights() {
         Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights"][0]*Canvas.width, Canvas.ratios["lights"][1]*Canvas.height)
-
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
         Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.lights.width/3, 0, Canvas.lights.width/3, Canvas.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, Canvas.lights.width*shrinkFactor/3, Canvas.lights.height*shrinkFactor);
