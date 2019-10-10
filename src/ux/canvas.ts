@@ -123,6 +123,8 @@ export abstract class Canvas {
         Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width/3, this.lights.height)
 
         Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
+		setInterval(this.changeLights, 1000)
+
 
         Canvas.drawn = true
     }
@@ -132,11 +134,11 @@ export abstract class Canvas {
 
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
-        Canvas.context.drawImage(this.lights, Canvas.xLights1*this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
-        console.log(this.xLights1)
-        this.xLights1 < 2 
-            ? this.xLights1 ++ 
-            : this.xLights1 = 0
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.lights.width/3, 0, Canvas.lights.width/3, Canvas.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, Canvas.lights.width*shrinkFactor/3, Canvas.lights.height*shrinkFactor);
+        console.log(Canvas.xLights1)
+        Canvas.xLights1 < 2 
+            ? Canvas.xLights1 ++ 
+            : Canvas.xLights1 = 0
     }
 }
 
