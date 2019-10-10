@@ -10,6 +10,12 @@ export class Game {
 		}
 	static gameLoop(timestamp) {
 		// divide by a 100 and round to get 100 ms interval
+		let mod = Math.round(timestamp/100)%5
+
+		if(mod === 0 && Canvas.drawn){
+			Canvas.changeLights()
+		}
+
 		Game.timeElapsed = timestamp
 		// console.log(timestamp)
 		requestAnimationFrame(Game.gameLoop)

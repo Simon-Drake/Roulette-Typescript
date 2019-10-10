@@ -30,7 +30,19 @@ export abstract class Canvas {
     public static screen: HTMLImageElement = new Image()
     public static supportDial: HTMLImageElement = new Image()
 
+    public static images: Array<HTMLImageElement> = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.screen, Canvas.supportDial]
+    
+    public static count: number = Canvas.images.length;
+
+    public static canvasElement: HTMLCanvasElement;
+
+    public static behindLightsOne: ImageData;
+
+    public static xLights1: number = 1;
+
     public static init(el: HTMLCanvasElement) {
+
+        this.canvasElement = el
 
         this.lights.src = '../../images/leds_safe_dial_minigame.png'
         this.background.src = '../../images/background_safe_minigame.png'
@@ -38,22 +50,23 @@ export abstract class Canvas {
         this.screen.src = '../../images/screen_safe_minigame.png'
         this.supportDial.src = '../../images/support_safe_dial_minigame.png'
 
-        Canvas.sizeCanvas(el)
-        window.addEventListener('resize', function(){Canvas.sizeCanvas(el)}, false)
+        window.addEventListener('resize', function(){Canvas.sizeCanvas()}, false)
         Canvas.context = el.getContext("2d");
 
-
-
-
-
+        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = Canvas.counter
     }
 
-    public static sizeCanvas(el: HTMLCanvasElement) {
+    public static counter() {
+        Canvas.count--
+        if(Canvas.count === 0) {Canvas.sizeCanvas()}
+    }
+
+    public static sizeCanvas() {
         // If the browser is large enough scale the canvas to its maximum dimensions.
 	    if(document.body.clientWidth > this.maxWidth && window.innerHeight > this.maxHeight) {
-            el.width = Canvas.maxWidth;
+            Canvas.canvasElement.width = Canvas.maxWidth;
             Canvas.width = Canvas.maxWidth
-            el.height = Canvas.maxHeight;
+            Canvas.canvasElement.height = Canvas.maxHeight;
             Canvas.height = Canvas.maxHeight
         }
         else {
@@ -61,12 +74,12 @@ export abstract class Canvas {
             // Else if its just width than scale to width otherwise its height and scale to height. 
             document.body.clientWidth < this.maxWidth && document.body.clientHeight < this.maxHeight 
                 ? document.body.clientWidth/this.maxWidth <= document.body.clientHeight/this.maxHeight 
-                    ? Canvas.scaleToWidth(el) 
-                    : Canvas.scaleToHeight(el) 
-                : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(el) : Canvas.scaleToHeight(el)
+                    ? Canvas.scaleToWidth(Canvas.canvasElement) 
+                    : Canvas.scaleToHeight(Canvas.canvasElement) 
+                : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(Canvas.canvasElement) : Canvas.scaleToHeight(Canvas.canvasElement)
         }
+        Canvas.drawImages()
 
-        this.drawn ? Canvas.redrawImages() : Canvas.drawImages()
     }
 
     private static scaleToWidth(el: HTMLCanvasElement) {
@@ -83,7 +96,7 @@ export abstract class Canvas {
         Canvas.width = Canvas.height*this.widthToHeightRatio;
     }
 
-    public static redrawImages(){
+    public static drawImages(){
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
@@ -105,39 +118,27 @@ export abstract class Canvas {
 
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*shrinkFactor, this.supportDial.height*shrinkFactor);
 
+        // Do once
+        // draw image under support dial?
+        Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width/3, this.lights.height)
+
         Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
+
+        Canvas.drawn = true
     }
 
-    public static drawImages() {
+    public static changeLights() {
+        Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights"][0]*Canvas.width, Canvas.ratios["lights"][1]*Canvas.height)
+
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
-        this.background.onload = () => {
-            // make a function for each draw?
-            Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
-        }
-
-        this.safe.onload = () => {
-            const widthFactor = this.safe.width*shrinkFactor
-            const heightFactor = this.safe.height*shrinkFactor
-            // Make a loop?
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0]*Canvas.width,  Canvas.ratios["safe1"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0]*Canvas.width,  Canvas.ratios["safe2"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe3"][0]*Canvas.width,  Canvas.ratios["safe3"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe4"][0]*Canvas.width,  Canvas.ratios["safe4"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe5"][0]*Canvas.width,  Canvas.ratios["safe5"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe6"][0]*Canvas.width,  Canvas.ratios["safe6"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe7"][0]*Canvas.width,  Canvas.ratios["safe7"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0]*Canvas.width,  Canvas.ratios["safe8"][1]*Canvas.height, widthFactor, heightFactor);
-            Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0]*Canvas.width,  Canvas.ratios["safe9"][1]*Canvas.height, widthFactor, heightFactor);
-        }
-
-        this.screen.onload = () => {
-            Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, this.screen.width*shrinkFactor, this.screen.height*shrinkFactor);
-        }
-
-        this.supportDial.onload = () => {
-            Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*shrinkFactor, this.supportDial.height*shrinkFactor);
-        }
+        Canvas.context.drawImage(this.lights, Canvas.xLights1*this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
+        console.log(this.xLights1)
+        this.xLights1 < 2 
+            ? this.xLights1 ++ 
+            : this.xLights1 = 0
+    }
+}
 
         // //Testing custom event making
         // this.supportDial.addEventListener('redraw', function(e){
@@ -145,14 +146,3 @@ export abstract class Canvas {
         // })
         // let event = new CustomEvent('redraw')
         // this.supportDial.dispatchEvent(event)
-
-        this.lights.onload = () => {
-            console.log(this.lights.width)
-            console.log(this.lights.height)
-
-            Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
-        }
-
-        this.drawn = true;
-    }
-}
