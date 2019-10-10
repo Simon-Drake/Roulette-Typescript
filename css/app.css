@@ -20,3 +20,14 @@ canvas {
     display: block;
     border: 1px solid var(--fg-1)
 }
+
+
+@font-face {
+    font-family: "instructions";
+    src: url('../src/fonts/Dimbo Italic.ttf');
+}
+
+@font-face {
+    font-family: "unlocked";
+    src: url('../src/fonts/TitanOne-Regular.ttf')
+}

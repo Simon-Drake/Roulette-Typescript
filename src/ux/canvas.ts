@@ -22,8 +22,13 @@ export abstract class Canvas {
         "safe9" : [(390/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "screen" : [(578/Canvas.maxWidth), (183/Canvas.maxHeight)],
         "supportDial" : [(582/Canvas.maxWidth), (280/Canvas.maxHeight)],
-        "lights" : [(582/Canvas.maxWidth), (270/Canvas.maxHeight)]
+        "lights1" : [(582/Canvas.maxWidth), (270/Canvas.maxHeight)],
+        "lights2" : [(758/Canvas.maxWidth), (270/Canvas.maxHeight)],
+        "instructionsTop" : [(68/Canvas.maxWidth), (65/Canvas.maxHeight)],
+        "instructionsBottom" : [(68/Canvas.maxWidth), (110/Canvas.maxHeight)],
+        "unlockedSafes" : [(642/Canvas.maxWidth), (243/Canvas.maxHeight)]
     }
+
     public static lights: HTMLImageElement = new Image()
     public static background: HTMLImageElement = new Image()
     public static safe: HTMLImageElement = new Image()
@@ -37,8 +42,10 @@ export abstract class Canvas {
     public static canvasElement: HTMLCanvasElement;
 
     public static behindLightsOne: ImageData;
+    public static behindLightsTwo: ImageData;
 
     public static xLights1: number = 1;
+    public static xLights2: number = 2;
 
     public static init(el: HTMLCanvasElement) {
 
@@ -120,24 +127,46 @@ export abstract class Canvas {
 
         // Do once
         // draw image under support dial?
-        Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width/3, this.lights.height)
+        Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width/3, this.lights.height)
 
-        Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
-		setInterval(this.changeLights, 1000)
+        Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
 
+        // Do /3 once
+        Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width/3, this.lights.height)
+
+        Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
+
+        let fontSize = 45*shrinkFactor
+        Canvas.context.font = `${fontSize}px instructions`
+        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
+        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
+
+        Canvas.context.font = `${fontSize}px unlocked`
+        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
 
         Canvas.drawn = true
+
     }
 
     public static changeLights() {
-        Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights"][0]*Canvas.width, Canvas.ratios["lights"][1]*Canvas.height)
+        Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0]*Canvas.width, Canvas.ratios["lights1"][1]*Canvas.height)
+        Canvas.context.putImageData(Canvas.behindLightsTwo, Canvas.ratios["lights2"][0]*Canvas.width, Canvas.ratios["lights2"][1]*Canvas.height)
+
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
-        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.lights.width/3, 0, Canvas.lights.width/3, Canvas.lights.height, Canvas.ratios["lights"][0]*Canvas.width,  Canvas.ratios["lights"][1]*Canvas.height, Canvas.lights.width*shrinkFactor/3, Canvas.lights.height*shrinkFactor);
-        console.log(Canvas.xLights1)
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.lights.width/3, 0, Canvas.lights.width/3, Canvas.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.lights.width*shrinkFactor/3, Canvas.lights.height*shrinkFactor);
+
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights2*Canvas.lights.width/3, 0, Canvas.lights.width/3, Canvas.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.lights.width*shrinkFactor/3, Canvas.lights.height*shrinkFactor);
+
+
         Canvas.xLights1 < 2 
             ? Canvas.xLights1 ++ 
             : Canvas.xLights1 = 0
+
+        // probably dont need this one
+        Canvas.xLights2 < 2 
+            ? Canvas.xLights2 ++ 
+            : Canvas.xLights2 = 0
     }
 }
 
