@@ -7,5 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Simon Drake",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/github.com/Simon-Drake/Roulette-Typescript.git"
+  },
   "dependencies": {}
 }
