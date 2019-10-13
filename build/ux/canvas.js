@@ -1,5 +1,15 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 export class Canvas {
     static init(el) {
+        Canvas.loadFonts();
         this.canvasElement = el;
         this.lights.src = '../../images/leds_safe_dial_minigame.png';
         this.background.src = '../../images/background_safe_minigame.png';
@@ -9,6 +19,24 @@ export class Canvas {
         window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
         Canvas.context = el.getContext("2d");
         this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = Canvas.counter;
+    }
+    static loadFonts() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const unl = new FontFace('unlocked', 'url(../../src/fonts/TitanOne-Regular.ttf)');
+            yield unl.load();
+            document.fonts.add(unl);
+            console.log('loaded');
+            Canvas.writeWords();
+        });
+    }
+    static writeWords() {
+        const shrinkFactor = Canvas.width / Canvas.maxWidth;
+        let fontSize = 45 * shrinkFactor;
+        // Canvas.context.font = `${fontSize}px instructions`
+        // Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
+        // Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
+        Canvas.context.font = `${fontSize}px unlocked`;
+        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
     }
     static counter() {
         Canvas.count--;
@@ -71,12 +99,6 @@ export class Canvas {
         // Do /3 once
         Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width / 3, this.lights.height);
         Canvas.context.drawImage(this.lights, this.lights.width / 3, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
-        let fontSize = 45 * shrinkFactor;
-        Canvas.context.font = `${fontSize}px instructions`;
-        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
-        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
-        Canvas.context.font = `${fontSize}px unlocked`;
-        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
         Canvas.drawn = true;
     }
     static changeLights() {

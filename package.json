@@ -11,5 +11,7 @@
     "type": "git",
     "url": "git://github.com/github.com/Simon-Drake/Roulette-Typescript.git"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/css-font-loading-module": "0.0.2"
+  }
 }

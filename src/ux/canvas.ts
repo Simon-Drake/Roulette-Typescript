@@ -49,6 +49,8 @@ export abstract class Canvas {
 
     public static init(el: HTMLCanvasElement) {
 
+        Canvas.loadFonts()
+
         this.canvasElement = el
 
         this.lights.src = '../../images/leds_safe_dial_minigame.png'
@@ -63,6 +65,25 @@ export abstract class Canvas {
         this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = Canvas.counter
     }
 
+    static async loadFonts(){
+        const unl = new FontFace('unlocked', 'url(../../src/fonts/TitanOne-Regular.ttf)')
+        await unl.load()
+        document.fonts.add(unl)
+        Canvas.writeWords()
+    }
+
+    public static writeWords() {
+        const shrinkFactor = Canvas.width/Canvas.maxWidth
+
+        let fontSize = 45*shrinkFactor
+        // Canvas.context.font = `${fontSize}px instructions`
+        // Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
+        // Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
+
+        Canvas.context.font = `${fontSize}px unlocked`
+        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
+
+    }
     public static counter() {
         Canvas.count--
         if(Canvas.count === 0) {Canvas.sizeCanvas()}
@@ -136,13 +157,7 @@ export abstract class Canvas {
 
         Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
 
-        let fontSize = 45*shrinkFactor
-        Canvas.context.font = `${fontSize}px instructions`
-        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
-        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
 
-        Canvas.context.font = `${fontSize}px unlocked`
-        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
 
         Canvas.drawn = true
 
