@@ -19,3 +19,4 @@ export class Game {
 Game.init();
 requestAnimationFrame(Game.gameLoop);
 setInterval(Canvas.changeLights, 1000);
+// setInterval(Canvas.supportGlow, 200)

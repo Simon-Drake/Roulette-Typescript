@@ -1,6 +1,8 @@
 export abstract class Canvas {
 
     public static drawn: boolean = false;
+    public static fontsLoaded: boolean = false;
+
     public static width: number;
     public static height: number;
     public static maxWidth: number = 916;
@@ -47,9 +49,15 @@ export abstract class Canvas {
     public static xLights1: number = 1;
     public static xLights2: number = 2;
 
+    public static radiusSupport: number;
+    public static radiusDial: number;
+    public static centerSupport: [number,number];
+
+
     public static init(el: HTMLCanvasElement) {
 
         Canvas.loadFonts()
+
 
         this.canvasElement = el
 
@@ -67,8 +75,14 @@ export abstract class Canvas {
 
     static async loadFonts(){
         const unl = new FontFace('unlocked', 'url(../../src/fonts/TitanOne-Regular.ttf)')
-        await unl.load()
+        const inst = new FontFace('instructions', 'url(../../src/fonts/Dimbo-Italic.ttf)')
+
+        await Promise.all([unl.load(), inst.load()])
         document.fonts.add(unl)
+        document.fonts.add(inst)
+
+        Canvas.fontsLoaded = true
+
         Canvas.writeWords()
     }
 
@@ -76,14 +90,14 @@ export abstract class Canvas {
         const shrinkFactor = Canvas.width/Canvas.maxWidth
 
         let fontSize = 45*shrinkFactor
-        // Canvas.context.font = `${fontSize}px instructions`
-        // Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
-        // Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
+        Canvas.context.font = `${fontSize}px instructions`
+        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
+        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
 
         Canvas.context.font = `${fontSize}px unlocked`
         Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
-
     }
+
     public static counter() {
         Canvas.count--
         if(Canvas.count === 0) {Canvas.sizeCanvas()}
@@ -157,10 +171,24 @@ export abstract class Canvas {
 
         Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
 
+        if(Canvas.fontsLoaded) {Canvas.writeWords() } 
+
 
 
         Canvas.drawn = true
 
+        Canvas.setDimensions()
+
+        Canvas.supportGlow()
+
+    }
+
+    public static setDimensions(){
+        const shrinkFactor = Canvas.width/Canvas.maxWidth
+
+        Canvas.radiusSupport = this.supportDial.width/2*shrinkFactor
+        Canvas.radiusDial = Canvas.radiusSupport*0.9
+        Canvas.centerSupport = [Canvas.ratios["supportDial"][0]*Canvas.width+this.supportDial.width/2, Canvas.ratios["supportDial"][1]*Canvas.height+this.supportDial.height/2]
     }
 
     public static changeLights() {
@@ -182,6 +210,28 @@ export abstract class Canvas {
         Canvas.xLights2 < 2 
             ? Canvas.xLights2 ++ 
             : Canvas.xLights2 = 0
+    }
+
+    // clen this up
+    public static async getPoint(){
+        // Canvas.centerSupport = [0,0]
+        // Canvas.radiusDial = 5
+        // Canvas.radiusSupport = 6
+        const a = Math.random() * 2 * Math.PI
+        const r = Canvas.radiusSupport * Math.sqrt(Math.random())
+        console.log(Canvas.centerSupport)
+
+        if(Math.sqrt((r*Math.cos(a))**2 + (r*Math.sin(a))**2) > Canvas.radiusDial) {
+            return [r*Math.cos(a)+Canvas.centerSupport[0], r*Math.sin(a)+Canvas.centerSupport[1]]
+        }
+        else {
+            return Canvas.getPoint()
+        }
+
+    }
+
+    public static supportGlow() {
+        Canvas.getPoint().then(function(value){console.log(value)})
     }
 }
 

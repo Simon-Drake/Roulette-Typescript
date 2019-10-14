@@ -23,18 +23,20 @@ export class Canvas {
     static loadFonts() {
         return __awaiter(this, void 0, void 0, function* () {
             const unl = new FontFace('unlocked', 'url(../../src/fonts/TitanOne-Regular.ttf)');
-            yield unl.load();
+            const inst = new FontFace('instructions', 'url(../../src/fonts/Dimbo-Italic.ttf)');
+            yield Promise.all([unl.load(), inst.load()]);
             document.fonts.add(unl);
-            console.log('loaded');
+            document.fonts.add(inst);
+            Canvas.fontsLoaded = true;
             Canvas.writeWords();
         });
     }
     static writeWords() {
         const shrinkFactor = Canvas.width / Canvas.maxWidth;
         let fontSize = 45 * shrinkFactor;
-        // Canvas.context.font = `${fontSize}px instructions`
-        // Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
-        // Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
+        Canvas.context.font = `${fontSize}px instructions`;
+        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
+        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
         Canvas.context.font = `${fontSize}px unlocked`;
         Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
     }
@@ -99,7 +101,18 @@ export class Canvas {
         // Do /3 once
         Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width / 3, this.lights.height);
         Canvas.context.drawImage(this.lights, this.lights.width / 3, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
+        if (Canvas.fontsLoaded) {
+            Canvas.writeWords();
+        }
         Canvas.drawn = true;
+        Canvas.setDimensions();
+        Canvas.supportGlow();
+    }
+    static setDimensions() {
+        const shrinkFactor = Canvas.width / Canvas.maxWidth;
+        Canvas.radiusSupport = this.supportDial.width / 2 * shrinkFactor;
+        Canvas.radiusDial = Canvas.radiusSupport * 0.9;
+        Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2, Canvas.ratios["supportDial"][1] * Canvas.height + this.supportDial.height / 2];
     }
     static changeLights() {
         Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height);
@@ -115,8 +128,29 @@ export class Canvas {
             ? Canvas.xLights2++
             : Canvas.xLights2 = 0;
     }
+    // clen this up
+    static getPoint() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Canvas.centerSupport = [0,0]
+            // Canvas.radiusDial = 5
+            // Canvas.radiusSupport = 6
+            const a = Math.random() * 2 * Math.PI;
+            const r = Canvas.radiusSupport * Math.sqrt(Math.random());
+            console.log(Canvas.centerSupport);
+            if (Math.sqrt(Math.pow((r * Math.cos(a)), 2) + Math.pow((r * Math.sin(a)), 2)) > Canvas.radiusDial) {
+                return [r * Math.cos(a) + Canvas.centerSupport[0], r * Math.sin(a) + Canvas.centerSupport[1]];
+            }
+            else {
+                return Canvas.getPoint();
+            }
+        });
+    }
+    static supportGlow() {
+        Canvas.getPoint().then(function (value) { console.log(value); });
+    }
 }
 Canvas.drawn = false;
+Canvas.fontsLoaded = false;
 Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
 Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
