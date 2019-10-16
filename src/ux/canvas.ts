@@ -48,6 +48,8 @@ export abstract class Canvas {
 
     public static behindLightsOne: ImageData;
     public static behindLightsTwo: ImageData;
+    public static wholeScreen: ImageData;
+
 
     public static xLights1: number = 1;
     public static xLights2: number = 2;
@@ -182,6 +184,8 @@ export abstract class Canvas {
 
         Canvas.setDimensions()
 
+        Canvas.wholeScreen = Canvas.context.getImageData(0, 0, Canvas.width, Canvas.height)
+
         Canvas.supportGlow()
 
     }
@@ -238,23 +242,81 @@ export abstract class Canvas {
     // make it async?
     public static supportGlow() {
         Canvas.getPoint().then(function(values){
-            const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
-            for(let i = 0; i <= 10; i++) {
-                setTimeout(function(){Canvas.drawSpark(values, imageData, 1-i/10)}, 1000+i*200)
+            const shrinkFactor = Canvas.width/Canvas.maxWidth
+
+            // const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
+            for(let i = 1; i <= 20; i++) {
+                setTimeout(function(){Canvas.drawSpark(values, i*1)}, 1000+i*100)
             }
+
+            for(let i = 20; i >= 1; i--) {
+                setTimeout(function(){Canvas.removeSpark(values, i*1)}, 5100-i*100)
+            }
+
+
         })
     }
 
-    public static drawSpark(values, imageData, transparency) {
-        Canvas.context.globalAlpha = transparency
-        Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
-        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-25, values[1]-25, 50 , 50)
-        Canvas.context.globalAlpha = 1
-        // make the whole thing an if else
-        // might not need this if transperency is 0
-        if(transparency = 0) {
-            Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
-        }
+    public static drawSpark(values, radius) {
+        console.log(radius)
+
+        // Try without save and restore
+        Canvas.context.save();
+
+        Canvas.context.beginPath();
+        Canvas.context.arc(values[0], values[1], radius, 0, Math.PI * 2);
+        // Do I need close path?
+        // Canvas.context.closePath();
+        Canvas.context.clip();
+    
+        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-radius, values[1]-radius, 2*radius , 2*radius)
+        Canvas.context.restore();
+    }
+    public static removeSpark(values, radius) {
+        console.log(radius)
+
+        const shrinkFactor = Canvas.width/Canvas.maxWidth
+
+        // Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
+
+        // Try without save and restore
+        Canvas.context.save();
+        Canvas.context.beginPath();
+        Canvas.context.arc(values[0], values[1], radius+1, 0, Math.PI * 2);
+        // Do I need close path?
+        Canvas.context.closePath();
+        Canvas.context.clip();
+        Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
+
+        Canvas.context.restore();
+
+
+        // Canvas.context.putImageData(Canvas.wholeScreen, 0, 0) 
+        Canvas.context.save();
+        
+
+        Canvas.context.beginPath();
+        Canvas.context.arc(values[0], values[1], radius+5, 0, Math.PI * 2);
+        // Do I need close path?
+        Canvas.context.closePath();
+        Canvas.context.clip();
+        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*shrinkFactor, this.supportDial.height*shrinkFactor);
+        Canvas.context.restore();
+
+
+
+        
+        Canvas.context.save();
+
+        Canvas.context.beginPath();
+        Canvas.context.arc(values[0], values[1], radius-1, 0, Math.PI * 2);
+        // Do I need close path? -- no
+        Canvas.context.closePath();
+        Canvas.context.clip();
+
+        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-25, values[1]-25,50 ,50)
+
+        Canvas.context.restore();
     }
 }
 
