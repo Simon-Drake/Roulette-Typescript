@@ -16,9 +16,10 @@ export class Canvas {
         this.safe.src = '../../images/safe_minigame.png';
         this.screen.src = '../../images/screen_safe_minigame.png';
         this.supportDial.src = '../../images/support_safe_dial_minigame.png';
+        this.sparkSafe.src = '../../images/spark_safe.png';
         window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
         Canvas.context = el.getContext("2d");
-        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = Canvas.counter;
+        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter;
     }
     static loadFonts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -110,9 +111,11 @@ export class Canvas {
     }
     static setDimensions() {
         const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        Canvas.radiusSupport = this.supportDial.width / 2 * shrinkFactor;
-        Canvas.radiusDial = Canvas.radiusSupport * 0.9;
-        Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2, Canvas.ratios["supportDial"][1] * Canvas.height + this.supportDial.height / 2];
+        console.log(shrinkFactor);
+        Canvas.radiusSupport = (this.supportDial.width - 6) / 2 * shrinkFactor;
+        Canvas.radiusDial = Canvas.radiusSupport * 0.8;
+        // plus 30 on the height for marker
+        Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2 * shrinkFactor, Canvas.ratios["supportDial"][1] * Canvas.height + 30 * shrinkFactor + (Canvas.supportDial.height - 30 * shrinkFactor) / 2 * shrinkFactor];
     }
     static changeLights() {
         Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height);
@@ -145,8 +148,25 @@ export class Canvas {
             }
         });
     }
+    // make it async?
     static supportGlow() {
-        Canvas.getPoint().then(function (value) { console.log(value); });
+        Canvas.getPoint().then(function (values) {
+            const imageData = Canvas.context.getImageData(values[0] - 25, values[1] - 25, 50, 50);
+            for (let i = 0; i <= 10; i++) {
+                setTimeout(function () { Canvas.drawSpark(values, imageData, 1 - i / 10); }, 1000 + i * 200);
+            }
+        });
+    }
+    static drawSpark(values, imageData, transparency) {
+        Canvas.context.globalAlpha = transparency;
+        Canvas.context.putImageData(imageData, values[0] - 25, values[1] - 25);
+        Canvas.context.drawImage(Canvas.sparkSafe, values[0] - 25, values[1] - 25, 50, 50);
+        Canvas.context.globalAlpha = 1;
+        // make the whole thing an if else
+        // might not need this if transperency is 0
+        if (transparency = 0) {
+            Canvas.context.putImageData(imageData, values[0] - 25, values[1] - 25);
+        }
     }
 }
 Canvas.drawn = false;
@@ -180,7 +200,9 @@ Canvas.background = new Image();
 Canvas.safe = new Image();
 Canvas.screen = new Image();
 Canvas.supportDial = new Image();
-Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.screen, Canvas.supportDial];
+Canvas.sparkSafe = new Image();
+Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe,
+    Canvas.sparkSafe, Canvas.screen, Canvas.supportDial];
 Canvas.count = Canvas.images.length;
 Canvas.xLights1 = 1;
 Canvas.xLights2 = 2;

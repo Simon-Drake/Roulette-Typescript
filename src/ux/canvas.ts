@@ -36,8 +36,11 @@ export abstract class Canvas {
     public static safe: HTMLImageElement = new Image()
     public static screen: HTMLImageElement = new Image()
     public static supportDial: HTMLImageElement = new Image()
+    public static sparkSafe: HTMLImageElement = new Image()
 
-    public static images: Array<HTMLImageElement> = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.screen, Canvas.supportDial]
+
+    public static images: Array<HTMLImageElement> = [Canvas.lights, Canvas.background, Canvas.safe, 
+        Canvas.sparkSafe, Canvas.screen, Canvas.supportDial]
     
     public static count: number = Canvas.images.length;
 
@@ -66,11 +69,13 @@ export abstract class Canvas {
         this.safe.src = '../../images/safe_minigame.png'
         this.screen.src = '../../images/screen_safe_minigame.png'
         this.supportDial.src = '../../images/support_safe_dial_minigame.png'
+        this.sparkSafe.src = '../../images/spark_safe.png'
+
 
         window.addEventListener('resize', function(){Canvas.sizeCanvas()}, false)
         Canvas.context = el.getContext("2d");
 
-        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = Canvas.counter
+        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
     }
 
     static async loadFonts(){
@@ -171,9 +176,7 @@ export abstract class Canvas {
 
         Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*shrinkFactor/3, this.lights.height*shrinkFactor);
 
-        if(Canvas.fontsLoaded) {Canvas.writeWords() } 
-
-
+        if(Canvas.fontsLoaded) {Canvas.writeWords()} 
 
         Canvas.drawn = true
 
@@ -185,10 +188,12 @@ export abstract class Canvas {
 
     public static setDimensions(){
         const shrinkFactor = Canvas.width/Canvas.maxWidth
+        console.log(shrinkFactor)
 
-        Canvas.radiusSupport = this.supportDial.width/2*shrinkFactor
-        Canvas.radiusDial = Canvas.radiusSupport*0.9
-        Canvas.centerSupport = [Canvas.ratios["supportDial"][0]*Canvas.width+this.supportDial.width/2, Canvas.ratios["supportDial"][1]*Canvas.height+this.supportDial.height/2]
+        Canvas.radiusSupport = (this.supportDial.width-6)/2*shrinkFactor
+        Canvas.radiusDial = Canvas.radiusSupport*0.8
+        // plus 30 on the height for marker
+        Canvas.centerSupport = [Canvas.ratios["supportDial"][0]*Canvas.width+this.supportDial.width/2*shrinkFactor, Canvas.ratios["supportDial"][1]*Canvas.height+30*shrinkFactor+(Canvas.supportDial.height-30*shrinkFactor)/2*shrinkFactor]
     }
 
     public static changeLights() {
@@ -230,8 +235,26 @@ export abstract class Canvas {
 
     }
 
+    // make it async?
     public static supportGlow() {
-        Canvas.getPoint().then(function(value){console.log(value)})
+        Canvas.getPoint().then(function(values){
+            const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
+            for(let i = 0; i <= 10; i++) {
+                setTimeout(function(){Canvas.drawSpark(values, imageData, 1-i/10)}, 1000+i*200)
+            }
+        })
+    }
+
+    public static drawSpark(values, imageData, transparency) {
+        Canvas.context.globalAlpha = transparency
+        Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
+        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-25, values[1]-25, 50 , 50)
+        Canvas.context.globalAlpha = 1
+        // make the whole thing an if else
+        // might not need this if transperency is 0
+        if(transparency = 0) {
+            Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
+        }
     }
 }
 
