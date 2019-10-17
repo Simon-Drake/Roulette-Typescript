@@ -7,16 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { Spark } from './Spark.js';
 export class Canvas {
     static init(el) {
         Canvas.loadFonts();
-        this.canvasElement = el;
         this.lights.src = '../../images/leds_safe_dial_minigame.png';
         this.background.src = '../../images/background_safe_minigame.png';
         this.safe.src = '../../images/safe_minigame.png';
         this.screen.src = '../../images/screen_safe_minigame.png';
         this.supportDial.src = '../../images/support_safe_dial_minigame.png';
         this.sparkSafe.src = '../../images/spark_safe.png';
+        this.canvasElement = el;
         window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
         Canvas.context = el.getContext("2d");
         this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter;
@@ -33,8 +34,7 @@ export class Canvas {
         });
     }
     static writeWords() {
-        const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        let fontSize = 45 * shrinkFactor;
+        let fontSize = 45 * Canvas.shrinkFactor;
         Canvas.context.font = `${fontSize}px instructions`;
         Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
         Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
@@ -64,6 +64,7 @@ export class Canvas {
                     : Canvas.scaleToHeight(Canvas.canvasElement)
                 : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(Canvas.canvasElement) : Canvas.scaleToHeight(Canvas.canvasElement);
         }
+        Canvas.shrinkFactor = Canvas.width / Canvas.maxWidth;
         Canvas.drawImages();
     }
     static scaleToWidth(el) {
@@ -79,10 +80,9 @@ export class Canvas {
         Canvas.width = Canvas.height * this.widthToHeightRatio;
     }
     static drawImages() {
-        const shrinkFactor = Canvas.width / Canvas.maxWidth;
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
-        const widthFactor = this.safe.width * shrinkFactor;
-        const heightFactor = this.safe.height * shrinkFactor;
+        const widthFactor = this.safe.width * Canvas.shrinkFactor;
+        const heightFactor = this.safe.height * Canvas.shrinkFactor;
         // Make a loop?
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
@@ -93,37 +93,38 @@ export class Canvas {
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
-        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * shrinkFactor, this.screen.height * shrinkFactor);
-        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * shrinkFactor, this.supportDial.height * shrinkFactor);
+        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
+        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * Canvas.shrinkFactor, this.supportDial.height * Canvas.shrinkFactor);
         // Do once
         // draw image under support dial?
         Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height, this.lights.width / 3, this.lights.height);
-        Canvas.context.drawImage(this.lights, 0, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
+        Canvas.context.drawImage(this.lights, 0, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height, this.lights.width * Canvas.shrinkFactor / 3, this.lights.height * Canvas.shrinkFactor);
         // Do /3 once
         Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width / 3, this.lights.height);
-        Canvas.context.drawImage(this.lights, this.lights.width / 3, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width * shrinkFactor / 3, this.lights.height * shrinkFactor);
+        Canvas.context.drawImage(this.lights, this.lights.width / 3, 0, this.lights.width / 3, this.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, this.lights.width * Canvas.shrinkFactor / 3, this.lights.height * Canvas.shrinkFactor);
         if (Canvas.fontsLoaded) {
             Canvas.writeWords();
         }
-        Canvas.drawn = true;
+        // Right place?
         Canvas.setDimensions();
-        Canvas.wholeScreen = Canvas.context.getImageData(0, 0, Canvas.width, Canvas.height);
-        Canvas.supportGlow();
     }
     static setDimensions() {
-        const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        console.log(shrinkFactor);
-        Canvas.radiusSupport = (this.supportDial.width - 6) / 2 * shrinkFactor;
+        Canvas.radiusSupport = (this.supportDial.width - 6) / 2 * Canvas.shrinkFactor;
         Canvas.radiusDial = Canvas.radiusSupport * 0.8;
         // plus 30 on the height for marker
-        Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2 * shrinkFactor, Canvas.ratios["supportDial"][1] * Canvas.height + 30 * shrinkFactor + (Canvas.supportDial.height - 30 * shrinkFactor) / 2 * shrinkFactor];
+        Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2 * Canvas.shrinkFactor, Canvas.ratios["supportDial"][1] * Canvas.height + 30 * Canvas.shrinkFactor + (Canvas.supportDial.height - 30 * Canvas.shrinkFactor) / 2 * Canvas.shrinkFactor];
+        Canvas.supportGlow();
+        // good for loop?
+        for (let i = 0; i < 20; i++) {
+            // Canvas.supportGlow()
+        }
     }
+    // Can we do change lights with save and restore? What is more expensive?
     static changeLights() {
         Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height);
         Canvas.context.putImageData(Canvas.behindLightsTwo, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height);
-        const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1 * Canvas.lights.width / 3, 0, Canvas.lights.width / 3, Canvas.lights.height, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height, Canvas.lights.width * shrinkFactor / 3, Canvas.lights.height * shrinkFactor);
-        Canvas.context.drawImage(Canvas.lights, Canvas.xLights2 * Canvas.lights.width / 3, 0, Canvas.lights.width / 3, Canvas.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, Canvas.lights.width * shrinkFactor / 3, Canvas.lights.height * shrinkFactor);
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1 * Canvas.lights.width / 3, 0, Canvas.lights.width / 3, Canvas.lights.height, Canvas.ratios["lights1"][0] * Canvas.width, Canvas.ratios["lights1"][1] * Canvas.height, Canvas.lights.width * Canvas.shrinkFactor / 3, Canvas.lights.height * Canvas.shrinkFactor);
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights2 * Canvas.lights.width / 3, 0, Canvas.lights.width / 3, Canvas.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, Canvas.lights.width * Canvas.shrinkFactor / 3, Canvas.lights.height * Canvas.shrinkFactor);
         Canvas.xLights1 < 2
             ? Canvas.xLights1++
             : Canvas.xLights1 = 0;
@@ -132,12 +133,8 @@ export class Canvas {
             ? Canvas.xLights2++
             : Canvas.xLights2 = 0;
     }
-    // clen this up
     static getPoint() {
         return __awaiter(this, void 0, void 0, function* () {
-            // Canvas.centerSupport = [0,0]
-            // Canvas.radiusDial = 5
-            // Canvas.radiusSupport = 6
             const a = Math.random() * 2 * Math.PI;
             const r = Canvas.radiusSupport * Math.sqrt(Math.random());
             console.log(Canvas.centerSupport);
@@ -150,70 +147,61 @@ export class Canvas {
         });
     }
     // make it async?
+    // Don't use hard numbers, save as constants 
     static supportGlow() {
         Canvas.getPoint().then(function (values) {
-            const shrinkFactor = Canvas.width / Canvas.maxWidth;
+            let spark = new Spark(values, 1);
+            Canvas.sparks[Canvas.lastID] = spark;
+            Canvas.lastID++;
             // const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
             for (let i = 1; i <= 20; i++) {
                 setTimeout(function () { Canvas.drawSpark(values, i * 1); }, 1000 + i * 100);
             }
+            // set in 100 ms timeslots, don't call every 3 ms
             for (let i = 20; i >= 1; i--) {
                 setTimeout(function () { Canvas.removeSpark(values, i * 1); }, 5100 - i * 100);
             }
+            console.log(Canvas.sparks);
         });
     }
     static drawSpark(values, radius) {
-        console.log(radius);
-        // Try without save and restore
         Canvas.context.save();
         Canvas.context.beginPath();
         Canvas.context.arc(values[0], values[1], radius, 0, Math.PI * 2);
-        // Do I need close path?
-        // Canvas.context.closePath();
         Canvas.context.clip();
         Canvas.context.drawImage(Canvas.sparkSafe, values[0] - radius, values[1] - radius, 2 * radius, 2 * radius);
         Canvas.context.restore();
     }
     static removeSpark(values, radius) {
-        console.log(radius);
-        const shrinkFactor = Canvas.width / Canvas.maxWidth;
-        // Canvas.context.putImageData(imageData, values[0]-25, values[1]-25) 
+        console.log(Date.now());
         // Try without save and restore
         Canvas.context.save();
         Canvas.context.beginPath();
         Canvas.context.arc(values[0], values[1], radius + 1, 0, Math.PI * 2);
-        // Do I need close path?
-        Canvas.context.closePath();
         Canvas.context.clip();
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
         Canvas.context.restore();
-        // Canvas.context.putImageData(Canvas.wholeScreen, 0, 0) 
         Canvas.context.save();
         Canvas.context.beginPath();
-        Canvas.context.arc(values[0], values[1], radius + 5, 0, Math.PI * 2);
-        // Do I need close path?
-        Canvas.context.closePath();
+        Canvas.context.arc(values[0], values[1], radius + 2, 0, Math.PI * 2);
         Canvas.context.clip();
-        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * shrinkFactor, this.supportDial.height * shrinkFactor);
+        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * Canvas.shrinkFactor, this.supportDial.height * Canvas.shrinkFactor);
         Canvas.context.restore();
         Canvas.context.save();
         Canvas.context.beginPath();
         Canvas.context.arc(values[0], values[1], radius - 1, 0, Math.PI * 2);
-        // Do I need close path? -- no
-        Canvas.context.closePath();
         Canvas.context.clip();
         Canvas.context.drawImage(Canvas.sparkSafe, values[0] - 25, values[1] - 25, 50, 50);
         Canvas.context.restore();
+        console.log(Date.now());
     }
 }
-Canvas.drawn = false;
-Canvas.fontsLoaded = false;
 Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
 Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
 Canvas.heightToWidthRatio = Canvas.maxHeight / Canvas.maxWidth;
-// How far left is it, how far down, 
-// Do divisions once?
+// How far left and how far down as a ratio of the size of the Canvas
+// Needed for browser resizing 
 Canvas.ratios = {
     "safe1": [(50 / Canvas.maxWidth), (173 / Canvas.maxHeight)],
     "safe2": [(220 / Canvas.maxWidth), (173 / Canvas.maxHeight)],
@@ -232,6 +220,7 @@ Canvas.ratios = {
     "instructionsBottom": [(68 / Canvas.maxWidth), (110 / Canvas.maxHeight)],
     "unlockedSafes": [(642 / Canvas.maxWidth), (243 / Canvas.maxHeight)]
 };
+// Image cache references
 Canvas.lights = new Image();
 Canvas.background = new Image();
 Canvas.safe = new Image();
@@ -240,7 +229,12 @@ Canvas.supportDial = new Image();
 Canvas.sparkSafe = new Image();
 Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe,
     Canvas.sparkSafe, Canvas.screen, Canvas.supportDial];
+// Runtime state variables
 Canvas.count = Canvas.images.length;
+Canvas.fontsLoaded = false;
+Canvas.lastID = 0;
+Canvas.sparks = {};
+// May be able to do this better
 Canvas.xLights1 = 1;
 Canvas.xLights2 = 2;
 // //Testing custom event making
