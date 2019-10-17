@@ -197,10 +197,6 @@ export abstract class Canvas {
 
         Canvas.supportGlow()
 
-        // good for loop?
-        for (let i = 0; i < 20; i ++){
-            // Canvas.supportGlow()
-        }
     }
 
     // Can we do change lights with save and restore? What is more expensive?
@@ -224,10 +220,10 @@ export abstract class Canvas {
             : Canvas.xLights2 = 0
     }
 
+    // decrease radius. some are on outer grip
     public static async getPoint(){
         const a = Math.random() * 2 * Math.PI
         const r = Canvas.radiusSupport * Math.sqrt(Math.random())
-        console.log(Canvas.centerSupport)
 
         if(Math.sqrt((r*Math.cos(a))**2 + (r*Math.sin(a))**2) > Canvas.radiusDial) {
             return [r*Math.cos(a)+Canvas.centerSupport[0], r*Math.sin(a)+Canvas.centerSupport[1]]
@@ -241,63 +237,84 @@ export abstract class Canvas {
     // make it async?
     // Don't use hard numbers, save as constants 
     public static supportGlow() {
-        Canvas.getPoint().then(function(values){
+        for(let i = 0; i <= 10; i++) {
+            Canvas.getPoint().then(function(values){
 
-            let spark = new Spark(values, 1)
-            Canvas.sparks[Canvas.lastID] = spark
-            Canvas.lastID ++;
+                let spark = new Spark(values, 2)
+                Canvas.sparks[Canvas.lastID] = spark
+                Canvas.lastID ++;
 
-            // const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
-            for(let i = 1; i <= 20; i++) {
-                setTimeout(function(){Canvas.drawSpark(values, i*1)}, 1000+i*100)
-            }
+                // if i = 5
+                if (i == 10) {
+                    Canvas.drawSparks()
+                }
+            })
+        }
+        // // const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
+        // for(let i = 1; i <= 20; i++) {
+        //     setTimeout(function(){Canvas.drawSpark(values, i*1)}, 1000+i*100)
+        // }
 
-            // set in 100 ms timeslots, don't call every 3 ms
-            for(let i = 20; i >= 1; i--) {
-                setTimeout(function(){Canvas.removeSpark(values, i*1)}, 5100-i*100)
-            }
-
-            console.log(Canvas.sparks)
-
-
-        })
+        // // set in 100 ms timeslots, don't call every 3 ms
+        // for(let i = 20; i >= 1; i--) {
+        //     setTimeout(function(){Canvas.removeSpark(values, i*1)}, 5100-i*100)
+        // }
     }
 
-    public static drawSpark(values, radius) {
+    public static drawSparks() {
 
-        Canvas.context.save();
-        Canvas.context.beginPath();
-        Canvas.context.arc(values[0], values[1], radius, 0, Math.PI * 2);
-        Canvas.context.clip();
-        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-radius, values[1]-radius, 2*radius , 2*radius)
-        Canvas.context.restore();
+        // change 0
+        if (Canvas.sparks[0].radius == 20) {
+            Canvas.removeSpark()
+        }
+        else {
+            for (let x in Canvas.sparks){
+                Canvas.context.save();
+                Canvas.context.beginPath();
+                Canvas.context.arc(Canvas.sparks[x].values[0], Canvas.sparks[x].values[1], Canvas.sparks[x].radius, 0, Math.PI * 2);
+                Canvas.context.clip();
+                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[x].values[0]-Canvas.sparks[x].radius, Canvas.sparks[x].values[1]-Canvas.sparks[x].radius, 2*Canvas.sparks[x].radius , 2*Canvas.sparks[x].radius)
+                Canvas.context.restore();
+                Canvas.sparks[x].radius ++;
+            }
+            setTimeout(function(){Canvas.drawSparks()}, 100)
+        }
     }
-    public static removeSpark(values, radius) {
-        console.log(Date.now())
+    public static removeSpark() {
+        if (Canvas.sparks[0].radius == 0) {
+            console.log("done")
+        }
+        else{
 
-        // Try without save and restore
-        Canvas.context.save();
-        Canvas.context.beginPath();
-        Canvas.context.arc(values[0], values[1], radius+1, 0, Math.PI * 2);
-        Canvas.context.clip();
-        Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
-        Canvas.context.restore();
+            // if
+            Canvas.context.save();
+            Canvas.context.beginPath();
+            Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
+            Canvas.context.clip();
+            Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
+            Canvas.context.restore();
 
-        Canvas.context.save();
-        Canvas.context.beginPath();
-        Canvas.context.arc(values[0], values[1], radius+2, 0, Math.PI * 2);
-        Canvas.context.clip();
-        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
-        Canvas.context.restore();
+            Canvas.context.save();
+            Canvas.context.beginPath();
+            Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
+            Canvas.context.clip();
+            Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
+            Canvas.context.restore();
 
-        Canvas.context.save();
-        Canvas.context.beginPath();
-        Canvas.context.arc(values[0], values[1], radius-1, 0, Math.PI * 2);
-        Canvas.context.clip();
-        Canvas.context.drawImage(Canvas.sparkSafe, values[0]-25, values[1]-25,50 ,50)
-        Canvas.context.restore();
+            for (let x in Canvas.sparks){ 
+    
+                // if not expanding decrease radius
+                Canvas.context.save();
+                Canvas.context.beginPath();
+                Canvas.context.arc(Canvas.sparks[x].values[0], Canvas.sparks[x].values[1], Canvas.sparks[x].radius-1, 0, Math.PI * 2);
+                Canvas.context.clip();
+                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[x].values[0]-25, Canvas.sparks[x].values[1]-25,50 ,50)
+                Canvas.context.restore();
 
-        console.log(Date.now())
+                Canvas.sparks[x].radius --;
+            }
+            setTimeout(function(){Canvas.removeSpark()}, 100)
+        }
     }
 }
 
