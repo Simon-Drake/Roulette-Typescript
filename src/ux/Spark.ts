@@ -1,9 +1,12 @@
 export class Spark{
-    values: number[];
+    x: number;
+    y: number;
     radius: number;
+    // remove expanding?
     expanding: boolean;
-    constructor( values, radius){
-        this.values = values
+    constructor( x, y, radius){
+        this.x = x
+        this.y = y
         this.radius = radius
         this.expanding = true
     }
