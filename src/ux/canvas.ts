@@ -54,7 +54,10 @@ export abstract class Canvas {
     public static radiusDial: number;
     public static centerSupport: [number,number];
     public static lastID: number = 0;
-    public static sparks: object = {};
+    public static sparks: object = {
+        0 : [],
+        1 : []
+    };
     public static batch: number = 0
 
 
@@ -237,21 +240,29 @@ export abstract class Canvas {
 
     // make it async?
     // Don't use hard numbers, save as constants 
-    public static supportGlow() {
-        for(let i = 0; i < 5; i++) {
-            Canvas.getPoint().then(function(values){
+    public static async supportGlow() {
 
-                let spark = new Spark(values, 2)
-                Canvas.sparks[Canvas.lastID] = spark
-                Canvas.lastID ++;
+        await Promise.all([Canvas.getPoint(), Canvas.getPoint()]).then(function(values){
+            console.log(values)
+        })
 
-                // if i = 5
-                if (i == z) {
-                    console.log(i)
-                    Canvas.drawSparks()
-                }
-            })
-        }
+        // for(let i = 0; i < 5; i++) {
+        //     Canvas.getPoint().then(function(values){
+
+        //         let spark = new Spark(values, 2)
+
+
+        //         Canvas.sparks[Canvas.lastID].push(spark)
+        //         console.log(Canvas.sparks)
+
+
+        //         // if i = 5
+        //         if (i == 4) {
+        //             Canvas.drawSparks(Canvas.lastID)
+        //             Canvas.lastID ++;
+        //         }
+        //     })
+        // }
         // // const imageData = Canvas.context.getImageData(values[0]-25, values[1]-25, 50 , 50)
         // for(let i = 1; i <= 20; i++) {
         //     setTimeout(function(){Canvas.drawSpark(values, i*1)}, 1000+i*100)
@@ -263,39 +274,37 @@ export abstract class Canvas {
         // }
     }
 
-    public static allExpanded(){
-        for (let x in Canvas.sparks)  {
-            console.log(Canvas.sparks[x].expanding)
-            if (Canvas.sparks[x].expanding = true) return false
+    public static allExpanded(id){
+        for (let x in Canvas.sparks[id])  {
+            if (Canvas.sparks[id][x].expanding = true) return false
         }
 
         return true
     }
 
-    public static drawSparks() {
-        console.log(Canvas.sparks)
-        console.log(Canvas.allExpanded())
-        if(Canvas.allExpanded()){
-            Canvas.removeSpark()
+    public static drawSparks(id) {
+        console.log(Canvas.allExpanded(id))
+        if(Canvas.allExpanded(id)){
+            Canvas.removeSpark(id)
         }
         else {
             for (let x in Canvas.sparks){
                 Canvas.context.save();
                 Canvas.context.beginPath();
-                Canvas.context.arc(Canvas.sparks[x].values[0], Canvas.sparks[x].values[1], Canvas.sparks[x].radius, 0, Math.PI * 2);
+                Canvas.context.arc(Canvas.sparks[id][x].values[0], Canvas.sparks[id][x].values[1], Canvas.sparks[id][x].radius, 0, Math.PI * 2);
                 Canvas.context.clip();
-                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[x].values[0]-Canvas.sparks[x].radius, Canvas.sparks[x].values[1]-Canvas.sparks[x].radius, 2*Canvas.sparks[x].radius , 2*Canvas.sparks[x].radius)
+                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[id][x].values[0]-Canvas.sparks[id][x].radius, Canvas.sparks[id][x].values[1]-Canvas.sparks[id][x].radius, 2*Canvas.sparks[id][x].radius , 2*Canvas.sparks[id][x].radius)
                 Canvas.context.restore();
-                Canvas.sparks[x].radius ++;
-                console.log(Canvas.sparks[x].radius)
-                if (Canvas.sparks[x].radius == 20) {
-                    Canvas.sparks[x].expanding = false
+                Canvas.sparks[id][x].radius ++;
+                console.log(Canvas.sparks[id][x].radius)
+                if (Canvas.sparks[id][x].radius == 20) {
+                    Canvas.sparks[id][x].expanding = false
                 }
             }
-            setTimeout(function(){Canvas.drawSparks()}, 100)
+            setTimeout(function(){Canvas.drawSparks(id)}, 100)
         }
     }
-    public static removeSpark() {
+    public static removeSpark(id) {
         if (Canvas.sparks[0].radius == 0) {
             console.log("done")
         }
@@ -318,28 +327,28 @@ export abstract class Canvas {
 
             for (let x in Canvas.sparks){ 
                 
-                if (Canvas.sparks[x].expanding) {
+                if (Canvas.sparks[id][x].expanding) {
                     console.log("passing here")
                     Canvas.context.save();
                     Canvas.context.beginPath();
-                    Canvas.context.arc(Canvas.sparks[x].values[0], Canvas.sparks[x].values[1], Canvas.sparks[x].radius, 0, Math.PI * 2);
+                    Canvas.context.arc(Canvas.sparks[id][x].values[0], Canvas.sparks[id][x].values[1], Canvas.sparks[id][x].radius, 0, Math.PI * 2);
                     Canvas.context.clip();
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[x].values[0]-25, Canvas.sparks[x].values[1]-25,50 ,50)
+                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[id][x].values[0]-25, Canvas.sparks[id][x].values[1]-25,50 ,50)
                     Canvas.context.restore();
                 }
                 else {
                     Canvas.context.save();
                     Canvas.context.beginPath();
-                    Canvas.context.arc(Canvas.sparks[x].values[0], Canvas.sparks[x].values[1], Canvas.sparks[x].radius-1, 0, Math.PI * 2);
+                    Canvas.context.arc(Canvas.sparks[id][x].values[0], Canvas.sparks[id][x].values[1], Canvas.sparks[id][x].radius-1, 0, Math.PI * 2);
                     Canvas.context.clip();
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[x].values[0]-25, Canvas.sparks[x].values[1]-25,50 ,50)
+                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[id][x].values[0]-25, Canvas.sparks[id][x].values[1]-25,50 ,50)
                     Canvas.context.restore();
     
-                    Canvas.sparks[x].radius --;
+                    Canvas.sparks[id][x].radius --;
                 }
 
             }
-            setTimeout(function(){Canvas.removeSpark()}, 100)
+            setTimeout(function(){Canvas.removeSpark(id)}, 100)
         }
     }
 }
