@@ -251,27 +251,24 @@ export abstract class Canvas {
             }
             Canvas.drawSparks(Canvas.sparks.length-5)
         })
-
-        // for(let i = 0; i < 5; i++) {
-        //     Canvas.getPoint().then(function(values){
-
-        //         let spark = new Spark(values, 2)
-
-
-        //         Canvas.sparks[Canvas.lastID].push(spark)
-        //         console.log(Canvas.sparks)
-
-
-        //         // if i = 5
-        //         if (i == 4) {
-        //             Canvas.drawSparks(Canvas.lastID)
-        //             Canvas.lastID ++;
-        //         }
-        //     })
-        // }
     }
 
     public static drawSparks(index) {
+        // if change radius change increment
+        Canvas.context.save();
+        Canvas.context.beginPath();
+        // hard code?
+        Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
+        Canvas.context.clip();
+        Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
+        Canvas.context.restore();
+
+        Canvas.context.save();
+        Canvas.context.beginPath();
+        Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
+        Canvas.context.clip();
+        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
+        Canvas.context.restore();
         // hard code
         for (let i = index; i < index + 5; i++){
             Canvas.sparks[i].radius ++;
