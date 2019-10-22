@@ -1,8 +1,7 @@
 export class Spark {
-    constructor(x, y, radius) {
+    constructor(x, y, size) {
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.expanding = true;
+        this.size = size;
     }
 }

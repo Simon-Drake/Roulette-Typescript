@@ -29,6 +29,8 @@ export abstract class Canvas {
         "safe9" : [(390/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "screen" : [(578/Canvas.maxWidth), (183/Canvas.maxHeight)],
         "supportDial" : [(582/Canvas.maxWidth), (280/Canvas.maxHeight)],
+        "dial" : [(593/Canvas.maxWidth), (318/Canvas.maxHeight)],
+        "spin" : [(695/Canvas.maxWidth), (420/Canvas.maxHeight)],
         "lights1" : [(582/Canvas.maxWidth), (270/Canvas.maxHeight)],
         "lights2" : [(758/Canvas.maxWidth), (270/Canvas.maxHeight)],
         "instructionsTop" : [(68/Canvas.maxWidth), (65/Canvas.maxHeight)],
@@ -43,16 +45,21 @@ export abstract class Canvas {
     public static screen: HTMLImageElement = new Image()
     public static supportDial: HTMLImageElement = new Image()
     public static sparkSafe: HTMLImageElement = new Image()
+    public static dial: HTMLImageElement = new Image()
+    public static spin: HTMLImageElement = new Image()
     public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, 
-        Canvas.sparkSafe, Canvas.screen, Canvas.supportDial]
+        Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin]
     
 
     // Runtime state variables
     public static count: number = Canvas.images.length;
     public static fontsLoaded: boolean = false;
+    public static spinOn: boolean = true;
     public static behindLightsOne: ImageData;
     public static behindLightsTwo: ImageData;
+    public static behindSpin: ImageData;
     public static radiusSupport: number;
+    public static radiusSpin: number;
     public static radiusDial: number;
     public static centerSupport: [number,number];
     public static lastID: number = 0;
@@ -74,13 +81,36 @@ export abstract class Canvas {
         this.screen.src = '../../images/screen_safe_minigame.png'
         this.supportDial.src = '../../images/support_safe_dial_minigame.png'
         this.sparkSafe.src = '../../images/spark_safe.png'
+        this.dial.src = '../../images/safe_dial_minigame.png'
+        this.spin.src = '../../images/text_spin_safe_dial_minigame.png'
+
+
 
         this.canvasElement = el
 
+        // need false?
         window.addEventListener('resize', function(){Canvas.sizeCanvas()}, false)
+        el.addEventListener('click', function(e){Canvas.intersect(e.offsetX, e.offsetY)}, false)
+
         Canvas.context = el.getContext("2d");
 
-        this.background.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
+        this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = 
+                this.spin.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
+    }
+
+    public static intersect(x, y){
+        let inside = Math.sqrt((Canvas.centerSupport[0]-x)**2 + (Canvas.centerSupport[1]-y)**2) < Canvas.radiusSpin
+        if(inside){
+            Canvas.spinWheel()
+        }
+    }
+
+    public static spinWheel(){
+        Canvas.context.save()
+        Canvas.context.translate(this.centerSupport[0], this.centerSupport[1])
+        Canvas.context.rotate(0.69)
+        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width-this.centerSupport[0],  Canvas.ratios["dial"][1]*Canvas.height-this.centerSupport[1], this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor);        
+        Canvas.context.restore()
     }
 
     public static async loadFonts(){
@@ -171,6 +201,13 @@ export abstract class Canvas {
 
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
 
+        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width,  Canvas.ratios["dial"][1]*Canvas.height, this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor);
+
+        Canvas.behindSpin = Canvas.context.getImageData(Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width, this.spin.height)
+        Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
+
+
+
         // Do once
         // draw image under support dial?
         Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width/3, this.lights.height)
@@ -190,19 +227,25 @@ export abstract class Canvas {
 
     }
 
+    public static flashSpin(){
+        if(Canvas.spinOn){
+            Canvas.context.putImageData(Canvas.behindSpin, Canvas.ratios["spin"][0]*Canvas.width, Canvas.ratios["spin"][1]*Canvas.height)
+            Canvas.spinOn = false
+        }
+        else {
+            Canvas.context.putImageData(Canvas.behindSpin, Canvas.ratios["spin"][0]*Canvas.width, Canvas.ratios["spin"][1]*Canvas.height)
+            Canvas.context.drawImage(Canvas.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, Canvas.spin.width*Canvas.shrinkFactor, Canvas.spin.height*Canvas.shrinkFactor);
+            Canvas.spinOn = true
+        }
+    }
+
     public static setDimensions(){
 
-        Canvas.radiusSupport = (this.supportDial.width-6)/2*Canvas.shrinkFactor
-        Canvas.radiusDial = Canvas.radiusSupport*0.8
-        // plus 30 on the height for marker
+        Canvas.radiusSupport = (this.supportDial.width-15)/2*Canvas.shrinkFactor
+        Canvas.radiusSpin = this.spin.width/2*Canvas.shrinkFactor
+        Canvas.radiusDial = Canvas.radiusSupport*0.9
+        // plus 30 on the height for marker, hard coded?
         Canvas.centerSupport = [Canvas.ratios["supportDial"][0]*Canvas.width+this.supportDial.width/2*Canvas.shrinkFactor, Canvas.ratios["supportDial"][1]*Canvas.height+30*Canvas.shrinkFactor+(Canvas.supportDial.height-30*Canvas.shrinkFactor)/2*Canvas.shrinkFactor]
-
-
-        Canvas.supportGlow()
-
-
-
-
     }
 
     // Can we do change lights with save and restore? What is more expensive?
@@ -229,7 +272,8 @@ export abstract class Canvas {
     // decrease radius. some are on outer grip
     public static async getPoint(){
         const a = Math.random() * 2 * Math.PI
-        const r = Canvas.radiusSupport * Math.sqrt(Math.random())
+        // hard
+        const r = (Canvas.radiusSupport-5) * Math.sqrt(Math.random())
 
         if(Math.sqrt((r*Math.cos(a))**2 + (r*Math.sin(a))**2) > Canvas.radiusDial) {
             return [r*Math.cos(a)+Canvas.centerSupport[0], r*Math.sin(a)+Canvas.centerSupport[1]]
@@ -244,17 +288,63 @@ export abstract class Canvas {
     // Don't use hard numbers, save as constants 
     public static async supportGlow() {
 
-        await Promise.all([Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint()]).then(function(values){
+        await Promise.all([Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint(), Canvas.getPoint()]).then(function(values){
             for (let x in values){
-                let spark = new Spark(values[x][0], values[x][1], 2)
+                let spark = new Spark(values[x][0], values[x][1], 10)
                 Canvas.sparks.push(spark)
             }
-            Canvas.drawSparks(Canvas.sparks.length-5)
+            Canvas.drawSparks(Canvas.sparks.length-values.length)
         })
     }
 
     public static drawSparks(index) {
+        const set = new Set([index, index+1, index+2, index+3, index+4, index+5, index+6, index+7])
+
+        Canvas.drawBackgroundAndDial()
+
+        for (let i = 0; i < Canvas.sparks.length; i++){ 
+            if (set.has(i)) {
+                Canvas.sparks[i].size += 5;
+                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+            }
+            else {
+                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+            }
+        }
+        if (Canvas.sparks[index].size == 55){
+            Canvas.removeSpark(index)
+        }
+        else {
+            setTimeout(function(){Canvas.drawSparks(index)}, 60)
+        }
+    }
+
+    public static removeSpark(index) {
+        const set = new Set([index, index+1, index+2, index+3, index+4, index+5, index+6, index+7])
+
+        if (Canvas.sparks[index].size == 0) {
+            console.log("done")
+            // delete sparks
+        }
+        else{
+            Canvas.drawBackgroundAndDial()
+            for (let i = 0; i < Canvas.sparks.length; i++){ 
+                if (set.has(i)) {
+                    Canvas.sparks[i].size -= 5;
+                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                }
+                else {
+                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                }
+            }
+            setTimeout(function(){Canvas.removeSpark(index)}, 60)
+        }
+    }
+
+    public static drawBackgroundAndDial(){
+        // can implement DRY morE?
         // if change radius change increment
+        // I shouldnt have to clip twice
         Canvas.context.save();
         Canvas.context.beginPath();
         // hard code?
@@ -268,81 +358,10 @@ export abstract class Canvas {
         Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
         Canvas.context.clip();
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
+        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width,  Canvas.ratios["dial"][1]*Canvas.height, this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor);
+        if(Canvas.spinOn){
+            Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
+        }
         Canvas.context.restore();
-        // hard code
-        for (let i = index; i < index + 5; i++){
-            Canvas.sparks[i].radius ++;
-            Canvas.context.save();
-            Canvas.context.beginPath();
-            Canvas.context.arc(Canvas.sparks[i].x, Canvas.sparks[i].y, Canvas.sparks[i].radius, 0, Math.PI * 2);
-            Canvas.context.clip();
-            // can we use radius instead of 25 and 50?
-            console.log(Canvas.sparks[i].radius)
-            Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparkSafe.width/4, Canvas.sparkSafe.height/4, Canvas.sparkSafe.width/2, Canvas.sparkSafe.height/2, Canvas.sparks[i].x-25, Canvas.sparks[i].y-25, 50 , 50)
-            Canvas.context.restore();
-        }
-        if(Canvas.sparks[index].radius == 15){
-            Canvas.removeSpark(index)
-        }
-        else {
-            setTimeout(function(){Canvas.drawSparks(index)}, 100)
-        }
-    }
-
-    public static removeSpark(index) {
-        const set = new Set([index, index+1, index+2, index+3, index+4])
-        if (Canvas.sparks[index].radius == 0) {
-            console.log("done")
-        }
-        else{
-            // if change radius change increment
-            Canvas.context.save();
-            Canvas.context.beginPath();
-            // hard code?
-            Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
-            Canvas.context.clip();
-            Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
-            Canvas.context.restore();
-
-            Canvas.context.save();
-            Canvas.context.beginPath();
-            Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
-            Canvas.context.clip();
-            Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
-            Canvas.context.restore();
-
-            for (let i = 0; i < Canvas.sparks.length; i++){ 
-                if (set.has(i)) {
-                    console.log("passing here1")
-                    Canvas.sparks[i].radius --;
-                    // call a method
-                    Canvas.context.save();
-                    Canvas.context.beginPath();
-                    Canvas.context.arc(Canvas.sparks[i].x, Canvas.sparks[i].y, Canvas.sparks[i].radius, 0, Math.PI * 2);
-                    Canvas.context.clip();
-                    console.log(Canvas.sparks[i].radius)
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparkSafe.width/4, Canvas.sparkSafe.height/4, Canvas.sparkSafe.width/2, Canvas.sparkSafe.height/2, Canvas.sparks[i].x-25, Canvas.sparks[i].y-25, 50 , 50)
-
-                    Canvas.context.restore();
-                }
-                else {
-                    console.log("passing here2")
-                    Canvas.context.save();
-                    Canvas.context.beginPath();
-                    Canvas.context.arc(Canvas.sparks[i].x, Canvas.sparks[i].y, Canvas.sparks[i].radius, 0, Math.PI * 2);
-                    Canvas.context.clip();
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparkSafe.width/4, Canvas.sparkSafe.height/4, Canvas.sparkSafe.width/2, Canvas.sparkSafe.height/2, Canvas.sparks[i].x-25, Canvas.sparks[i].y-25, 50 , 50)
-                    Canvas.context.restore();
-                }
-            }
-            setTimeout(function(){Canvas.removeSpark(index)}, 100)
-        }
     }
 }
-
-        // //Testing custom event making
-        // this.supportDial.addEventListener('redraw', function(e){
-        //     console.log("triggered i think")
-        // })
-        // let event = new CustomEvent('redraw')
-        // this.supportDial.dispatchEvent(event)
