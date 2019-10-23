@@ -1,11 +1,13 @@
 import {Spark} from './Spark.js'
+import {Game} from './Game.js'
 
 
+// done in 2 classes
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-export abstract class Canvas {
+export class Canvas {
 
     // put semicolons
 
@@ -21,6 +23,12 @@ export abstract class Canvas {
     public static widthToHeightRatio: number = Canvas.maxWidth / Canvas.maxHeight
     public static heightToWidthRatio: number = Canvas.maxHeight / Canvas.maxWidth
     public static shrinkFactor: number;
+    public static radiusSupport: number;
+    public static radiusSpin: number;
+    public static radiusDial: number;
+    public static openSafeXTranslate: number = -43
+    public static openSafeYTranslate: number = -25
+
     // How far left and how far down as a ratio of the size of the Canvas
     // Needed for browser resizing 
     public static ratios: object = {
@@ -48,16 +56,17 @@ export abstract class Canvas {
     public static lights: HTMLImageElement = new Image()
     public static background: HTMLImageElement = new Image()
     public static safe: HTMLImageElement = new Image()
+    public static safeOpen: HTMLImageElement = new Image()
     public static screen: HTMLImageElement = new Image()
     public static supportDial: HTMLImageElement = new Image()
     public static sparkSafe: HTMLImageElement = new Image()
     public static dial: HTMLImageElement = new Image()
     public static spin: HTMLImageElement = new Image()
-    public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, 
+    public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, 
         Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin]
-    
 
-    // Runtime state variables
+
+        // Runtime state variables
     public static count: number = Canvas.images.length;
     public static fontsLoaded: boolean = false;
     public static spinOn: boolean = true;
@@ -65,15 +74,16 @@ export abstract class Canvas {
     public static behindLightsOne: ImageData;
     public static behindLightsTwo: ImageData;
     public static behindSpin: ImageData;
-    public static radiusSupport: number;
-    public static radiusSpin: number;
-    public static radiusDial: number;
     public static centerSupport: [number,number];
-    public static lastID: number = 0;
     public static sparks: Spark[] = [];
-    public static batch: number = 0
+    public static currentRotation: number = 0;
+    public static game: Game;
+
+
+    // in app?
     public static glowInterval: number;
-    public static currentRouletteN: number = 2;
+    public static flashInterval: number;
+    
 
 
 
@@ -81,7 +91,9 @@ export abstract class Canvas {
     public static xLights1: number = 1;
     public static xLights2: number = 2;
 
-    public static init(el: HTMLCanvasElement) {
+    public static init(el: HTMLCanvasElement, game) {
+
+        Canvas.game = game
 
         Canvas.loadFonts()
 
@@ -93,8 +105,7 @@ export abstract class Canvas {
         this.sparkSafe.src = '../../images/spark_safe.png'
         this.dial.src = '../../images/safe_dial_minigame.png'
         this.spin.src = '../../images/text_spin_safe_dial_minigame.png'
-
-
+        this.safeOpen.src =  '../../images/safe_open_minigame.png'
 
         this.canvasElement = el
 
@@ -106,11 +117,11 @@ export abstract class Canvas {
         Canvas.context = el.getContext("2d");
 
         this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = 
-                this.spin.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
+                this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
 
         setInterval(Canvas.changeLights, 1000)
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
-        setInterval(Canvas.flashSpin, 500)
+        Canvas.flashInterval = setInterval(Canvas.flashSpin, 500)
     }
 
 
@@ -118,20 +129,22 @@ export abstract class Canvas {
         let inside = Math.sqrt((Canvas.centerSupport[0]-x)**2 + (Canvas.centerSupport[1]-y)**2) < Canvas.radiusSpin
         if(inside){
             Canvas.spinning = true;
+            Canvas.spinOn = false
             // delete all current sparks
+            Canvas.deleteSparks()
             clearInterval(Canvas.glowInterval)
+            clearInterval(Canvas.flashInterval)
             Canvas.drawBackgroundAndDial()
             let state
             let antiClockwise = Math.round(Math.random())*Math.random()*Math.PI
             antiClockwise
             ? state = 0
             : state = 1
-            Canvas.spinWheel(0, antiClockwise, -Canvas.degToRadians(360/9*getRandomInt(9)), Canvas.degToRadians(360/9*getRandomInt(9)), state)
+            Canvas.spinWheel(Canvas.currentRotation, antiClockwise, -Canvas.degToRadians(360/9*getRandomInt(9)), Canvas.degToRadians(360/9*getRandomInt(9)), state)
         }
     }
 
     // should be static
-
     public static degToRadians(deg){
         return deg*Math.PI/180
     }
@@ -154,27 +167,35 @@ export abstract class Canvas {
                 rotation += 0.05;
                 Canvas.rotate(rotation)
                 rotation >= antiClockwise
-                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 40)
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 40)
+                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 30)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 30)
                 break;
             }
             case 1: {
                 rotation -= 0.05;
                 Canvas.rotate(rotation)
                 rotation <= clockwise
-                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 40)
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 40)
+                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 30)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 30)
                 break;
             }
             case 2 : {
                 rotation += 0.05;
                 Canvas.rotate(rotation)
                 rotation >= (antiClockwise2 + clockwise)
-                ? console.log(Canvas.getResult(rotation))
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 40)
+                ? Canvas.evaluateScore(rotation)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 30)
                 break;
             }
         }
+    }
+    
+    public static evaluateScore(rotation){
+        Canvas.currentRotation = rotation
+        let result = Canvas.getResult(rotation)
+        Canvas.spinning = false;
+        Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
+        Canvas.flashInterval = setInterval(Canvas.flashSpin, 500)
     }
 
     public static rotate(rotation){
@@ -365,12 +386,14 @@ export abstract class Canvas {
             const set = new Set([index, index+1, index+2, index+3, index+4, index+5, index+6, index+7])
             Canvas.drawBackgroundAndDial()
             for (let i = 0; i < Canvas.sparks.length; i++){ 
-                if (set.has(i)) {
-                    Canvas.sparks[i].size += 5;
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
-                }
-                else {
-                    Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                if (Canvas.sparks[i]){
+                    if (set.has(i)) {
+                        Canvas.sparks[i].size += 5;
+                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                    }
+                    else {
+                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                    }
                 }
             }
             if (Canvas.sparks[index].size == 55){
@@ -382,22 +405,31 @@ export abstract class Canvas {
         }
     }
 
+    public static deleteSparks(){
+        for (let i = 0; i < Canvas.sparks.length; i++){ 
+            delete Canvas.sparks[i]
+        }
+    }
+
     public static removeSpark(index) {
         if (!Canvas.spinning){
             const set = new Set([index, index+1, index+2, index+3, index+4, index+5, index+6, index+7])
             if (Canvas.sparks[index].size == 0) {
-                console.log("done")
-                // delete sparks
+                for (let i = index; i <= index+7; i++){
+                    delete Canvas.sparks[i]
+                }
             }
             else{
                 Canvas.drawBackgroundAndDial()
                 for (let i = 0; i < Canvas.sparks.length; i++){ 
-                    if (set.has(i)) {
-                        Canvas.sparks[i].size -= 5;
-                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
-                    }
-                    else {
-                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                    if (Canvas.sparks[i]){
+                        if (set.has(i)) {
+                            Canvas.sparks[i].size -= 5;
+                            Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                        }
+                        else {
+                            Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x-Canvas.sparks[i].size/2, Canvas.sparks[i].y-Canvas.sparks[i].size/2, Canvas.sparks[i].size, Canvas.sparks[i].size)
+                        }
                     }
                 }
                 setTimeout(function(){Canvas.removeSpark(index)}, 60)
@@ -411,18 +443,11 @@ export abstract class Canvas {
         // I shouldnt have to clip twice
         Canvas.context.save();
         Canvas.context.beginPath();
-        // hard code?
         Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
         Canvas.context.clip();
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
-        Canvas.context.restore();
-
-        Canvas.context.save();
-        Canvas.context.beginPath();
-        Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
-        Canvas.context.clip();
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
-        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width,  Canvas.ratios["dial"][1]*Canvas.height, this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor);
+        Canvas.rotate(Canvas.currentRotation)
         if(Canvas.spinOn){
             Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
         }

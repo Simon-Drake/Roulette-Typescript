@@ -1,4 +1,5 @@
 export class Spark{
+    // access modifier?
     x: number;
     y: number;
     size: number;
