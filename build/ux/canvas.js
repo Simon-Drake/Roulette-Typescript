@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Spark } from './Spark.js';
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
 export class Canvas {
     static init(el) {
         Canvas.loadFonts();
@@ -22,23 +25,77 @@ export class Canvas {
         this.canvasElement = el;
         // need false?
         window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
+        // need to add if clicks again while spinning do nothing
         el.addEventListener('click', function (e) { Canvas.intersect(e.offsetX, e.offsetY); }, false);
         Canvas.context = el.getContext("2d");
         this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload =
             this.spin.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter;
+        setInterval(Canvas.changeLights, 1000);
+        Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
+        setInterval(Canvas.flashSpin, 500);
     }
     static intersect(x, y) {
         let inside = Math.sqrt(Math.pow((Canvas.centerSupport[0] - x), 2) + Math.pow((Canvas.centerSupport[1] - y), 2)) < Canvas.radiusSpin;
         if (inside) {
-            Canvas.spinWheel();
+            Canvas.spinning = true;
+            // delete all current sparks
+            clearInterval(Canvas.glowInterval);
+            Canvas.drawBackgroundAndDial();
+            let state;
+            let antiClockwise = Math.round(Math.random()) * Math.random() * Math.PI;
+            antiClockwise
+                ? state = 0
+                : state = 1;
+            Canvas.spinWheel(0, antiClockwise, -Canvas.degToRadians(360 / 9 * getRandomInt(9)), Canvas.degToRadians(360 / 9 * getRandomInt(9)), state);
         }
     }
-    static spinWheel() {
-        Canvas.context.save();
+    // should be static
+    static degToRadians(deg) {
+        return deg * Math.PI / 180;
+    }
+    static getResult(rotation) {
+        // hard
+        return Canvas.ifZeroReturn9((2 - Math.round(rotation / 0.7) + 9) % 9);
+    }
+    static ifZeroReturn9(n) {
+        return n == 0 ? 9 : n;
+    }
+    // 0.7 is one slice
+    // put in a state variable
+    // shouldnt be static?
+    static spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state) {
+        switch (state) {
+            case 0: {
+                rotation += 0.05;
+                Canvas.rotate(rotation);
+                rotation >= antiClockwise
+                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 40)
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 40);
+                break;
+            }
+            case 1: {
+                rotation -= 0.05;
+                Canvas.rotate(rotation);
+                rotation <= clockwise
+                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 40)
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 40);
+                break;
+            }
+            case 2: {
+                rotation += 0.05;
+                Canvas.rotate(rotation);
+                rotation >= (antiClockwise2 + clockwise)
+                    ? console.log(Canvas.getResult(rotation))
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 40);
+                break;
+            }
+        }
+    }
+    static rotate(rotation) {
         Canvas.context.translate(this.centerSupport[0], this.centerSupport[1]);
-        Canvas.context.rotate(0.69);
+        Canvas.context.rotate(rotation);
         Canvas.context.drawImage(this.dial, 0, 0, this.dial.width / 3, this.dial.height, Canvas.ratios["dial"][0] * Canvas.width - this.centerSupport[0], Canvas.ratios["dial"][1] * Canvas.height - this.centerSupport[1], this.dial.width * Canvas.shrinkFactor / 3, this.dial.height * Canvas.shrinkFactor);
-        Canvas.context.restore();
+        Canvas.context.setTransform(1, 0, 0, 1, 0, 0);
     }
     static loadFonts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -165,7 +222,7 @@ export class Canvas {
     static getPoint() {
         return __awaiter(this, void 0, void 0, function* () {
             const a = Math.random() * 2 * Math.PI;
-            // hard
+            // hardcode
             const r = (Canvas.radiusSupport - 5) * Math.sqrt(Math.random());
             if (Math.sqrt(Math.pow((r * Math.cos(a)), 2) + Math.pow((r * Math.sin(a)), 2)) > Canvas.radiusDial) {
                 return [r * Math.cos(a) + Canvas.centerSupport[0], r * Math.sin(a) + Canvas.centerSupport[1]];
@@ -189,42 +246,46 @@ export class Canvas {
         });
     }
     static drawSparks(index) {
-        const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
-        Canvas.drawBackgroundAndDial();
-        for (let i = 0; i < Canvas.sparks.length; i++) {
-            if (set.has(i)) {
-                Canvas.sparks[i].size += 5;
-                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
-            }
-            else {
-                Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
-            }
-        }
-        if (Canvas.sparks[index].size == 55) {
-            Canvas.removeSpark(index);
-        }
-        else {
-            setTimeout(function () { Canvas.drawSparks(index); }, 60);
-        }
-    }
-    static removeSpark(index) {
-        const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
-        if (Canvas.sparks[index].size == 0) {
-            console.log("done");
-            // delete sparks
-        }
-        else {
+        if (!Canvas.spinning) {
+            const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
             Canvas.drawBackgroundAndDial();
             for (let i = 0; i < Canvas.sparks.length; i++) {
                 if (set.has(i)) {
-                    Canvas.sparks[i].size -= 5;
+                    Canvas.sparks[i].size += 5;
                     Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
                 }
                 else {
                     Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
                 }
             }
-            setTimeout(function () { Canvas.removeSpark(index); }, 60);
+            if (Canvas.sparks[index].size == 55) {
+                Canvas.removeSpark(index);
+            }
+            else {
+                setTimeout(function () { Canvas.drawSparks(index); }, 60);
+            }
+        }
+    }
+    static removeSpark(index) {
+        if (!Canvas.spinning) {
+            const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
+            if (Canvas.sparks[index].size == 0) {
+                console.log("done");
+                // delete sparks
+            }
+            else {
+                Canvas.drawBackgroundAndDial();
+                for (let i = 0; i < Canvas.sparks.length; i++) {
+                    if (set.has(i)) {
+                        Canvas.sparks[i].size -= 5;
+                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
+                    }
+                    else {
+                        Canvas.context.drawImage(Canvas.sparkSafe, Canvas.sparks[i].x - Canvas.sparks[i].size / 2, Canvas.sparks[i].y - Canvas.sparks[i].size / 2, Canvas.sparks[i].size, Canvas.sparks[i].size);
+                    }
+                }
+                setTimeout(function () { Canvas.removeSpark(index); }, 60);
+            }
         }
     }
     static drawBackgroundAndDial() {
@@ -291,9 +352,11 @@ Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe,
 Canvas.count = Canvas.images.length;
 Canvas.fontsLoaded = false;
 Canvas.spinOn = true;
+Canvas.spinning = false;
 Canvas.lastID = 0;
 Canvas.sparks = [];
 Canvas.batch = 0;
+Canvas.currentRouletteN = 2;
 // May be able to do this better
 Canvas.xLights1 = 1;
 Canvas.xLights2 = 2;
