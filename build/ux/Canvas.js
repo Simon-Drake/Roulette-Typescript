@@ -30,15 +30,19 @@ export class Canvas {
         this.notes.src = '../../images/notes.png';
         this.gold.src = '../../images/gold.png';
         this.diamond.src = '../../images/diamond.png';
+        this.winScreen.src = '../../images/screen_safe_win.png';
         this.canvasElement = el;
         // need false?
-        window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
+        window.addEventListener('resize', function () { Canvas.sizeCanvas(); });
         // need to add if clicks again while spinning do nothing
-        el.addEventListener('click', function (e) { Canvas.intersect(e.offsetX, e.offsetY); }, false);
+        el.addEventListener('click', function (e) {
+            if (!Canvas.spinning)
+                Canvas.intersect(e.offsetX, e.offsetY);
+        });
         Canvas.context = el.getContext("2d");
         this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.coin.onload =
             this.ring.onload = this.notes.onload = this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload =
-                this.gold.onload = this.diamond.onload = Canvas.counter;
+                this.gold.onload = this.diamond.onload = this.winScreen.onload = Canvas.counter;
         setInterval(Canvas.changeLights, 1000);
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
         Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
@@ -48,11 +52,13 @@ export class Canvas {
         if (inside) {
             Canvas.spinning = true;
             Canvas.spinOn = false;
+            Canvas.game.spins += 1;
             // delete all current sparks
             Canvas.deleteSparks();
             clearInterval(Canvas.glowInterval);
             clearInterval(Canvas.flashInterval);
-            Canvas.drawBackgroundAndDial();
+            Canvas.drawBackgroundAndSupport();
+            // dont need to rotate here, right?
             let state;
             let antiClockwise = Math.round(Math.random()) * Math.random() * Math.PI;
             antiClockwise
@@ -78,27 +84,27 @@ export class Canvas {
     static spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state) {
         switch (state) {
             case 0: {
-                rotation += 0.05;
-                Canvas.rotate(rotation);
+                rotation += 0.03;
+                Canvas.rotate(rotation, 0);
                 rotation >= antiClockwise
-                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 30)
-                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 30);
+                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 15)
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 15);
                 break;
             }
             case 1: {
-                rotation -= 0.05;
-                Canvas.rotate(rotation);
+                rotation -= 0.03;
+                Canvas.rotate(rotation, 0);
                 rotation <= clockwise
-                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 30)
-                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 30);
+                    ? setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state + 1); }, 15)
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 15);
                 break;
             }
             case 2: {
-                rotation += 0.05;
-                Canvas.rotate(rotation);
+                rotation += 0.03;
+                Canvas.rotate(rotation, 0);
                 rotation >= (antiClockwise2 + clockwise)
                     ? Canvas.evaluateScore(rotation)
-                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 30);
+                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 15);
                 break;
             }
         }
@@ -106,20 +112,53 @@ export class Canvas {
     static evaluateScore(rotation) {
         Canvas.currentRotation = rotation;
         let result = Canvas.getResult(rotation);
-        Canvas.game.unlockedSafes.push(result);
-        Canvas.writeWords();
-        Canvas.spinning = false;
-        Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
-        Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
-        Canvas.openSafe(result);
+        if (Canvas.game.unlockedSafes.indexOf(result) === -1) {
+            Canvas.game.unlockedSafes.push(result);
+            Canvas.openSafe(result);
+            Canvas.assessWin(Canvas.game.boxes[result]);
+        }
+    }
+    static assessWin(m) {
+        if (Canvas.game.unlockedMultipliers.has(m)) {
+            Canvas.handleWin();
+        }
+        else {
+            Canvas.game.unlockedMultipliers.add(m);
+            Canvas.writeWords();
+            Canvas.redDial(0);
+        }
+    }
+    static handleWin() {
+        Canvas.deleteSparks();
+        clearInterval(Canvas.glowInterval);
+        clearInterval(Canvas.flashInterval);
+        Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, Canvas.screen.width * Canvas.shrinkFactor, Canvas.screen.height * Canvas.shrinkFactor);
+    }
+    static redDial(counter) {
+        if (counter == 10) {
+            Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
+            Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+            Canvas.spinning = false;
+        }
+        else {
+            Canvas.drawBackgroundAndSupport();
+            counter % 2 == 0
+                ? Canvas.rotate(Canvas.currentRotation, Canvas.dial.width / 3)
+                : Canvas.rotate(Canvas.currentRotation, 0);
+            counter++;
+            setTimeout(function () { Canvas.redDial(counter); }, 200);
+        }
     }
     static openSafe(result) {
         let s = "safe" + result.toString();
+        Canvas.context.putImageData(Canvas.behindSafes[s], Canvas.ratios[s][0] * Canvas.width, Canvas.ratios[s][1] * Canvas.height);
         Canvas.context.drawImage(Canvas.safeOpen, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate, Canvas.safeOpen.width * Canvas.shrinkFactor, Canvas.safeOpen.height * Canvas.shrinkFactor);
         let image = Canvas.mapMultiplierToImage(Canvas.game.boxes[result]);
-        Canvas.context.drawImage(image, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate, image.width * Canvas.shrinkFactor, image.height * Canvas.shrinkFactor);
+        // /2 once
+        Canvas.context.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.ratios[s][0] * Canvas.width + Canvas.priseXTranslate, Canvas.ratios[s][1] * Canvas.height + Canvas.priseYTranslate, image.width * Canvas.shrinkFactor / 2, image.height * Canvas.shrinkFactor);
     }
     static mapMultiplierToImage(multiplier) {
+        // need all square brackets?
         switch (multiplier) {
             case 15: {
                 return Canvas.coin;
@@ -138,11 +177,14 @@ export class Canvas {
             }
         }
     }
-    static rotate(rotation) {
-        Canvas.context.translate(this.centerSupport[0], this.centerSupport[1]);
+    static rotate(rotation, xTranslate) {
+        Canvas.context.translate(this.centerDial[0], this.centerDial[1]);
         Canvas.context.rotate(rotation);
-        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width / 3, this.dial.height, Canvas.ratios["dial"][0] * Canvas.width - this.centerSupport[0], Canvas.ratios["dial"][1] * Canvas.height - this.centerSupport[1], this.dial.width * Canvas.shrinkFactor / 3, this.dial.height * Canvas.shrinkFactor);
+        Canvas.context.drawImage(this.dial, xTranslate, 0, this.dial.width / 3, this.dial.height, Canvas.ratios["dial"][0] * Canvas.width - this.centerDial[0], Canvas.ratios["dial"][1] * Canvas.height - this.centerDial[1], this.dial.width * Canvas.shrinkFactor / 3, this.dial.height * Canvas.shrinkFactor);
         Canvas.context.setTransform(1, 0, 0, 1, 0, 0);
+        if (Canvas.spinOn) {
+            Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0] * Canvas.width, Canvas.ratios["spin"][1] * Canvas.height, this.spin.width * Canvas.shrinkFactor, this.spin.height * Canvas.shrinkFactor);
+        }
     }
     static loadFonts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -195,7 +237,9 @@ export class Canvas {
                 ? document.body.clientWidth / this.maxWidth <= document.body.clientHeight / this.maxHeight
                     ? Canvas.scaleToWidth(Canvas.canvasElement)
                     : Canvas.scaleToHeight(Canvas.canvasElement)
-                : document.body.clientWidth < this.maxWidth ? Canvas.scaleToWidth(Canvas.canvasElement) : Canvas.scaleToHeight(Canvas.canvasElement);
+                : document.body.clientWidth < this.maxWidth
+                    ? Canvas.scaleToWidth(Canvas.canvasElement)
+                    : Canvas.scaleToHeight(Canvas.canvasElement);
         }
         Canvas.shrinkFactor = Canvas.width / Canvas.maxWidth;
         Canvas.drawImages();
@@ -217,6 +261,15 @@ export class Canvas {
         const widthFactor = this.safe.width * Canvas.shrinkFactor;
         const heightFactor = this.safe.height * Canvas.shrinkFactor;
         // Make a loop?
+        Canvas.behindSafes["safe1"] = Canvas.context.getImageData(Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe2"] = Canvas.context.getImageData(Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe3"] = Canvas.context.getImageData(Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe4"] = Canvas.context.getImageData(Canvas.ratios["safe4"][0] * Canvas.width, Canvas.ratios["safe4"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe5"] = Canvas.context.getImageData(Canvas.ratios["safe5"][0] * Canvas.width, Canvas.ratios["safe5"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe6"] = Canvas.context.getImageData(Canvas.ratios["safe6"][0] * Canvas.width, Canvas.ratios["safe6"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe7"] = Canvas.context.getImageData(Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe8"] = Canvas.context.getImageData(Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
+        Canvas.behindSafes["safe9"] = Canvas.context.getImageData(Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
@@ -261,6 +314,7 @@ export class Canvas {
         Canvas.radiusDial = Canvas.radiusSupport * 0.9;
         // plus 30 on the height for marker, hard coded?
         Canvas.centerSupport = [Canvas.ratios["supportDial"][0] * Canvas.width + this.supportDial.width / 2 * Canvas.shrinkFactor, Canvas.ratios["supportDial"][1] * Canvas.height + 30 * Canvas.shrinkFactor + (Canvas.supportDial.height - 30 * Canvas.shrinkFactor) / 2 * Canvas.shrinkFactor];
+        Canvas.centerDial = [Canvas.ratios["dial"][0] * Canvas.width + this.dial.width / 6 * Canvas.shrinkFactor, Canvas.ratios["dial"][1] * Canvas.height + Canvas.dial.height / 2 * Canvas.shrinkFactor];
     }
     // Can we do change lights with save and restore? What is more expensive?
     static changeLights() {
@@ -306,7 +360,8 @@ export class Canvas {
     static drawSparks(index) {
         if (!Canvas.spinning) {
             const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
-            Canvas.drawBackgroundAndDial();
+            Canvas.drawBackgroundAndSupport();
+            Canvas.rotate(Canvas.currentRotation, 0);
             for (let i = 0; i < Canvas.sparks.length; i++) {
                 if (Canvas.sparks[i]) {
                     if (set.has(i)) {
@@ -340,7 +395,8 @@ export class Canvas {
                 }
             }
             else {
-                Canvas.drawBackgroundAndDial();
+                Canvas.drawBackgroundAndSupport();
+                Canvas.rotate(Canvas.currentRotation, 0);
                 for (let i = 0; i < Canvas.sparks.length; i++) {
                     if (Canvas.sparks[i]) {
                         if (set.has(i)) {
@@ -356,7 +412,7 @@ export class Canvas {
             }
         }
     }
-    static drawBackgroundAndDial() {
+    static drawBackgroundAndSupport() {
         // can implement DRY morE?
         // if change radius change increment
         // I shouldnt have to clip twice
@@ -366,10 +422,6 @@ export class Canvas {
         Canvas.context.clip();
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * Canvas.shrinkFactor, this.supportDial.height * Canvas.shrinkFactor);
-        Canvas.rotate(Canvas.currentRotation);
-        if (Canvas.spinOn) {
-            Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0] * Canvas.width, Canvas.ratios["spin"][1] * Canvas.height, this.spin.width * Canvas.shrinkFactor, this.spin.height * Canvas.shrinkFactor);
-        }
         Canvas.context.restore();
     }
 }
@@ -377,8 +429,10 @@ Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
 Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
 Canvas.heightToWidthRatio = Canvas.maxHeight / Canvas.maxWidth;
-Canvas.openSafeXTranslate = -43;
+Canvas.openSafeXTranslate = -35;
 Canvas.openSafeYTranslate = -25;
+Canvas.priseXTranslate = Canvas.openSafeXTranslate + 10;
+Canvas.priseYTranslate = Canvas.openSafeYTranslate + 6;
 // How far left and how far down as a ratio of the size of the Canvas
 // Needed for browser resizing 
 Canvas.ratios = {
@@ -416,13 +470,15 @@ Canvas.diamond = new Image();
 Canvas.gold = new Image();
 Canvas.notes = new Image();
 Canvas.ring = new Image();
+Canvas.winScreen = new Image();
 Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, Canvas.gold, Canvas.diamond,
-    Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin];
+    Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin, Canvas.winScreen];
 // Runtime state variables
 Canvas.count = Canvas.images.length;
 Canvas.fontsLoaded = false;
 Canvas.spinOn = true;
 Canvas.spinning = false;
+Canvas.behindSafes = {};
 Canvas.sparks = [];
 Canvas.currentRotation = 0;
 // May be able to do this better

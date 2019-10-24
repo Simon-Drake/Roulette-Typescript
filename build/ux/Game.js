@@ -13,16 +13,18 @@ function getRandomInt(max) {
 }
 export class Game {
     constructor() {
+        this.boxes = {};
+        this.spins = 0;
         this.multipliers = [];
         this.unlockedSafes = [];
+        this.unlockedMultipliers = new Set();
         this.multipliers.push(getRandomInt(5) + 15);
         this.completeMultipliers();
-        this.boxes = {};
     }
     // use then not all as they are changing and testing the same list
     completeMultipliers() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all([this.pushOne(), this.pushOne()]);
+            yield this.pushOne().then(() => this.pushOne());
             this.setBoxes();
         });
     }

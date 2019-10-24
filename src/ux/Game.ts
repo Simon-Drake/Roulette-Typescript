@@ -4,19 +4,19 @@ function getRandomInt(max) {
 }
 
 export class Game{
-    boxes: object;
+    boxes: object = {};
+    spins: number = 0;
     multipliers: number[] = [];
     unlockedSafes: number[] = [];
-    
+    unlockedMultipliers: any = new Set()
     constructor(){
         this.multipliers.push(getRandomInt(5)+15)
         this.completeMultipliers()
-        this.boxes = {}
     }
 
     // use then not all as they are changing and testing the same list
     public async completeMultipliers(){
-        await Promise.all([this.pushOne(), this.pushOne()])
+        await this.pushOne().then(() => this.pushOne())
         this.setBoxes()
     }
 
