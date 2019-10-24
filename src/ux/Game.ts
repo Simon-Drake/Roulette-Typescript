@@ -7,6 +7,7 @@ export class Game{
     boxes: object;
     multipliers: number[] = [];
     unlockedSafes: number[] = [];
+    
     constructor(){
         this.multipliers.push(getRandomInt(5)+15)
         this.completeMultipliers()
