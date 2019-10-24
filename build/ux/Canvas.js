@@ -25,14 +25,20 @@ export class Canvas {
         this.dial.src = '../../images/safe_dial_minigame.png';
         this.spin.src = '../../images/text_spin_safe_dial_minigame.png';
         this.safeOpen.src = '../../images/safe_open_minigame.png';
+        this.coin.src = '../../images/coins.png';
+        this.ring.src = '../../images/ring.png';
+        this.notes.src = '../../images/notes.png';
+        this.gold.src = '../../images/gold.png';
+        this.diamond.src = '../../images/diamond.png';
         this.canvasElement = el;
         // need false?
         window.addEventListener('resize', function () { Canvas.sizeCanvas(); }, false);
         // need to add if clicks again while spinning do nothing
         el.addEventListener('click', function (e) { Canvas.intersect(e.offsetX, e.offsetY); }, false);
         Canvas.context = el.getContext("2d");
-        this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload =
-            this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter;
+        this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.coin.onload =
+            this.ring.onload = this.notes.onload = this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload =
+                this.gold.onload = this.diamond.onload = Canvas.counter;
         setInterval(Canvas.changeLights, 1000);
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
         Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
@@ -100,9 +106,37 @@ export class Canvas {
     static evaluateScore(rotation) {
         Canvas.currentRotation = rotation;
         let result = Canvas.getResult(rotation);
+        Canvas.game.unlockedSafes.push(result);
+        Canvas.writeWords();
         Canvas.spinning = false;
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
         Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+        Canvas.openSafe(result);
+    }
+    static openSafe(result) {
+        let s = "safe" + result.toString();
+        Canvas.context.drawImage(Canvas.safeOpen, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate, Canvas.safeOpen.width * Canvas.shrinkFactor, Canvas.safeOpen.height * Canvas.shrinkFactor);
+        let image = Canvas.mapMultiplierToImage(Canvas.game.boxes[result]);
+        Canvas.context.drawImage(image, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate, image.width * Canvas.shrinkFactor, image.height * Canvas.shrinkFactor);
+    }
+    static mapMultiplierToImage(multiplier) {
+        switch (multiplier) {
+            case 15: {
+                return Canvas.coin;
+            }
+            case 16: {
+                return Canvas.ring;
+            }
+            case 17: {
+                return Canvas.notes;
+            }
+            case 18: {
+                return Canvas.gold;
+            }
+            case 19: {
+                return Canvas.diamond;
+            }
+        }
     }
     static rotate(rotation) {
         Canvas.context.translate(this.centerSupport[0], this.centerSupport[1]);
@@ -122,12 +156,23 @@ export class Canvas {
         });
     }
     static writeWords() {
+        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
         let fontSize = 45 * Canvas.shrinkFactor;
         Canvas.context.font = `${fontSize}px instructions`;
         Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
         Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
         Canvas.context.font = `${fontSize}px unlocked`;
-        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
+        Canvas.context.fillText(Canvas.getUnlockedSafesString(), Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
+    }
+    static getUnlockedSafesString() {
+        let s = '';
+        for (let i = 0; i < Canvas.game.unlockedSafes.length; i++) {
+            s += `${Canvas.game.unlockedSafes[i]}   `;
+        }
+        while (s.length < 16) {
+            s += "-   ";
+        }
+        return s.substr(0, s.length - 3);
     }
     static counter() {
         Canvas.count--;
@@ -172,7 +217,7 @@ export class Canvas {
         const widthFactor = this.safe.width * Canvas.shrinkFactor;
         const heightFactor = this.safe.height * Canvas.shrinkFactor;
         // Make a loop?
-        Canvas.context.drawImage(this.safeOpen, Canvas.ratios["safe1"][0] * Canvas.width - 43, Canvas.ratios["safe1"][1] * Canvas.height - 25, this.safeOpen.width, this.safeOpen.height);
+        Canvas.context.drawImage(this.safe, Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe4"][0] * Canvas.width, Canvas.ratios["safe4"][1] * Canvas.height, widthFactor, heightFactor);
@@ -181,7 +226,7 @@ export class Canvas {
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe7"][0] * Canvas.width, Canvas.ratios["safe7"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0] * Canvas.width, Canvas.ratios["safe8"][1] * Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0] * Canvas.width, Canvas.ratios["safe9"][1] * Canvas.height, widthFactor, heightFactor);
-        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
+        // Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, this.screen.width*Canvas.shrinkFactor, this.screen.height*Canvas.shrinkFactor);
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0] * Canvas.width, Canvas.ratios["supportDial"][1] * Canvas.height, this.supportDial.width * Canvas.shrinkFactor, this.supportDial.height * Canvas.shrinkFactor);
         Canvas.context.drawImage(this.dial, 0, 0, this.dial.width / 3, this.dial.height, Canvas.ratios["dial"][0] * Canvas.width, Canvas.ratios["dial"][1] * Canvas.height, this.dial.width * Canvas.shrinkFactor / 3, this.dial.height * Canvas.shrinkFactor);
         Canvas.behindSpin = Canvas.context.getImageData(Canvas.ratios["spin"][0] * Canvas.width, Canvas.ratios["spin"][1] * Canvas.height, this.spin.width, this.spin.height);
@@ -332,6 +377,8 @@ Canvas.maxWidth = 916;
 Canvas.maxHeight = 623;
 Canvas.widthToHeightRatio = Canvas.maxWidth / Canvas.maxHeight;
 Canvas.heightToWidthRatio = Canvas.maxHeight / Canvas.maxWidth;
+Canvas.openSafeXTranslate = -43;
+Canvas.openSafeYTranslate = -25;
 // How far left and how far down as a ratio of the size of the Canvas
 // Needed for browser resizing 
 Canvas.ratios = {
@@ -364,8 +411,13 @@ Canvas.supportDial = new Image();
 Canvas.sparkSafe = new Image();
 Canvas.dial = new Image();
 Canvas.spin = new Image();
-Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen,
-    Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin];
+Canvas.coin = new Image();
+Canvas.diamond = new Image();
+Canvas.gold = new Image();
+Canvas.notes = new Image();
+Canvas.ring = new Image();
+Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, Canvas.gold, Canvas.diamond,
+    Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin];
 // Runtime state variables
 Canvas.count = Canvas.images.length;
 Canvas.fontsLoaded = false;

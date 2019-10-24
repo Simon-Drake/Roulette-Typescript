@@ -6,19 +6,21 @@ function getRandomInt(max) {
 export class Game{
     boxes: object;
     multipliers: number[] = [];
+    unlockedSafes: number[] = [];
     constructor(){
-        this.multipliers.push(getRandomInt(6)+15)
+        this.multipliers.push(getRandomInt(5)+15)
         this.completeMultipliers()
         this.boxes = {}
     }
 
+    // use then not all as they are changing and testing the same list
     public async completeMultipliers(){
         await Promise.all([this.pushOne(), this.pushOne()])
         this.setBoxes()
     }
 
     public async pushOne(){
-        let int = getRandomInt(6)+15
+        let int = getRandomInt(5)+15
         this.multipliers.indexOf(int) === -1
             ? this.multipliers.push(int)
             : this.pushOne()

@@ -62,8 +62,13 @@ export class Canvas {
     public static sparkSafe: HTMLImageElement = new Image()
     public static dial: HTMLImageElement = new Image()
     public static spin: HTMLImageElement = new Image()
-    public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, 
-        Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin]
+    public static coin: HTMLImageElement = new Image()
+    public static diamond: HTMLImageElement = new Image()
+    public static gold: HTMLImageElement = new Image()
+    public static notes: HTMLImageElement = new Image()
+    public static ring: HTMLImageElement = new Image()
+    public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, Canvas.gold, Canvas.diamond,
+        Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin]
 
 
         // Runtime state variables
@@ -106,6 +111,12 @@ export class Canvas {
         this.dial.src = '../../images/safe_dial_minigame.png'
         this.spin.src = '../../images/text_spin_safe_dial_minigame.png'
         this.safeOpen.src =  '../../images/safe_open_minigame.png'
+        this.coin.src =  '../../images/coins.png'
+        this.ring.src =  '../../images/ring.png'
+        this.notes.src =  '../../images/notes.png'
+        this.gold.src =  '../../images/gold.png'
+        this.diamond.src =  '../../images/diamond.png'
+
 
         this.canvasElement = el
 
@@ -116,8 +127,9 @@ export class Canvas {
 
         Canvas.context = el.getContext("2d");
 
-        this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = 
-                this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload = Canvas.counter
+        this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.coin.onload =
+                this.ring.onload = this.notes.onload = this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload = 
+                this.gold.onload = this.diamond.onload = Canvas.counter
 
         setInterval(Canvas.changeLights, 1000)
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
@@ -193,9 +205,43 @@ export class Canvas {
     public static evaluateScore(rotation){
         Canvas.currentRotation = rotation
         let result = Canvas.getResult(rotation)
+        Canvas.game.unlockedSafes.push(result)
+        Canvas.writeWords()
         Canvas.spinning = false;
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
         Canvas.flashInterval = setInterval(Canvas.flashSpin, 500)
+        Canvas.openSafe(result)
+    }
+
+    public static openSafe(result){
+        let s = "safe" + result.toString()
+        Canvas.context.drawImage(Canvas.safeOpen, Canvas.ratios[s][0]*Canvas.width + Canvas.openSafeXTranslate,  Canvas.ratios[s][1]*Canvas.height + Canvas.openSafeYTranslate, 
+                    Canvas.safeOpen.width*Canvas.shrinkFactor, Canvas.safeOpen.height*Canvas.shrinkFactor);
+
+        let image = Canvas.mapMultiplierToImage(Canvas.game.boxes[result])
+        Canvas.context.drawImage(image, Canvas.ratios[s][0]*Canvas.width + Canvas.openSafeXTranslate,  Canvas.ratios[s][1]*Canvas.height + Canvas.openSafeYTranslate, 
+            image.width*Canvas.shrinkFactor, image.height*Canvas.shrinkFactor);
+    }
+    
+
+    public static mapMultiplierToImage(multiplier){
+        switch (multiplier) {
+            case 15 : {
+                return Canvas.coin
+            }
+            case 16 : {
+                return Canvas.ring
+            }
+            case 17 : {
+                return Canvas.notes
+            }
+            case 18 : {
+                return Canvas.gold
+            }
+            case 19 : {
+                return Canvas.diamond
+            }
+        }
     }
 
     public static rotate(rotation){
@@ -216,12 +262,24 @@ export class Canvas {
     }
 
     public static writeWords() {
+        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, this.screen.width*Canvas.shrinkFactor, this.screen.height*Canvas.shrinkFactor);
         let fontSize = 45*Canvas.shrinkFactor
         Canvas.context.font = `${fontSize}px instructions`
         Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0]*Canvas.width, Canvas.ratios["instructionsTop"][1]*Canvas.height)
         Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0]*Canvas.width, Canvas.ratios["instructionsBottom"][1]*Canvas.height)
         Canvas.context.font = `${fontSize}px unlocked`
-        Canvas.context.fillText('-   -   -   -', Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
+        Canvas.context.fillText(Canvas.getUnlockedSafesString(), Canvas.ratios["unlockedSafes"][0]*Canvas.width, Canvas.ratios["unlockedSafes"][1]*Canvas.height)
+    }
+
+    public static getUnlockedSafesString(){
+        let s = ''
+        for(let i = 0; i < Canvas.game.unlockedSafes.length; i++){
+            s += `${Canvas.game.unlockedSafes[i]}   `
+        }
+        while(s.length < 16){
+            s += "-   "
+        }
+        return s.substr(0, s.length-3)
     }
 
     public static counter() {
@@ -281,7 +339,7 @@ export class Canvas {
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe8"][0]*Canvas.width,  Canvas.ratios["safe8"][1]*Canvas.height, widthFactor, heightFactor);
         Canvas.context.drawImage(this.safe, Canvas.ratios["safe9"][0]*Canvas.width,  Canvas.ratios["safe9"][1]*Canvas.height, widthFactor, heightFactor);
 
-        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, this.screen.width*Canvas.shrinkFactor, this.screen.height*Canvas.shrinkFactor);
+        // Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, this.screen.width*Canvas.shrinkFactor, this.screen.height*Canvas.shrinkFactor);
 
         Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
 
@@ -290,17 +348,13 @@ export class Canvas {
         Canvas.behindSpin = Canvas.context.getImageData(Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width, this.spin.height)
         Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
 
-
-
         // Do once
         // draw image under support dial?
         Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width/3, this.lights.height)
-
         Canvas.context.drawImage(this.lights, 0, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width*Canvas.shrinkFactor/3, this.lights.height*Canvas.shrinkFactor);
 
         // Do /3 once
         Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width/3, this.lights.height)
-
         Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*Canvas.shrinkFactor/3, this.lights.height*Canvas.shrinkFactor);
 
         if(Canvas.fontsLoaded) {Canvas.writeWords()} 
