@@ -112,8 +112,6 @@ export class Canvas {
     public static flashInterval: number;
     
 
-
-
     // May be able to do this better
     public static xLights1: number = 1;
     public static xLights2: number = 2;
