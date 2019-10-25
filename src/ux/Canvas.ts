@@ -1,5 +1,7 @@
 import {Spark} from './Spark.js'
 import {Game} from './Game.js'
+import {Star} from './Star.js'
+
 
 
 // done in 2 classes
@@ -30,6 +32,11 @@ export class Canvas {
     public static openSafeYTranslate: number = -25
     public static priseXTranslate: number = Canvas.openSafeXTranslate + 10
     public static priseYTranslate: number = Canvas.openSafeYTranslate + 6
+    public static fontXTranslate: number = Canvas.priseXTranslate + 65
+    public static fontYTranslate: number = Canvas.priseYTranslate + 110
+    public static starXTranslate: number = Canvas.fontXTranslate - 15
+    public static starYTranslate: number = Canvas.fontYTranslate - 70
+
 
     // How far left and how far down as a ratio of the size of the Canvas
     // Needed for browser resizing 
@@ -44,8 +51,10 @@ export class Canvas {
         "safe8" : [(220/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "safe9" : [(390/Canvas.maxWidth), (467/Canvas.maxHeight)],
         "screen" : [(578/Canvas.maxWidth), (183/Canvas.maxHeight)],
+        "winScreen" : [(600/Canvas.maxWidth), (183/Canvas.maxHeight)],
         "supportDial" : [(582/Canvas.maxWidth), (280/Canvas.maxHeight)],
         "dial" : [(593/Canvas.maxWidth), (318/Canvas.maxHeight)],
+        "marker" : [(709/Canvas.maxWidth), (270/Canvas.maxHeight)],
         "spin" : [(695/Canvas.maxWidth), (420/Canvas.maxHeight)],
         "lights1" : [(582/Canvas.maxWidth), (270/Canvas.maxHeight)],
         "lights2" : [(758/Canvas.maxWidth), (270/Canvas.maxHeight)],
@@ -70,8 +79,13 @@ export class Canvas {
     public static notes: HTMLImageElement = new Image()
     public static ring: HTMLImageElement = new Image()
     public static winScreen: HTMLImageElement = new Image()
+    public static marker: HTMLImageElement = new Image()
+    public static star: HTMLImageElement = new Image()
+
+
     public static images: HTMLElement[] = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, Canvas.gold, Canvas.diamond,
-        Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin, Canvas.winScreen]
+        Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin, Canvas.marker, 
+        Canvas.winScreen, Canvas.star]
 
 
         // Runtime state variables
@@ -83,6 +97,8 @@ export class Canvas {
     public static behindLightsOne: ImageData;
     public static behindLightsTwo: ImageData;
     public static behindSpin: ImageData;
+    public static behindMarker: ImageData;
+
     public static behindSafes: object = {}
     public static centerSupport: [number,number];
     public static centerDial: [number,number];
@@ -104,7 +120,9 @@ export class Canvas {
 
     public static init(el: HTMLCanvasElement, game) {
 
+
         Canvas.game = game
+
 
         Canvas.loadFonts()
 
@@ -118,11 +136,14 @@ export class Canvas {
         this.spin.src = '../../images/text_spin_safe_dial_minigame.png'
         this.safeOpen.src =  '../../images/safe_open_minigame.png'
         this.coin.src =  '../../images/coins.png'
+        this.marker.src =  '../../images/marker.png'
         this.ring.src =  '../../images/ring.png'
         this.notes.src =  '../../images/notes.png'
         this.gold.src =  '../../images/gold.png'
         this.diamond.src =  '../../images/diamond.png'
         this.winScreen.src =  '../../images/screen_safe_win.png'
+        this.star.src =  '../../images/star.png'
+
 
 
         this.canvasElement = el
@@ -139,7 +160,7 @@ export class Canvas {
 
         this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.coin.onload =
                 this.ring.onload = this.notes.onload = this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload = 
-                this.gold.onload = this.diamond.onload = this.winScreen.onload = Canvas.counter
+                this.gold.onload = this.diamond.onload = this.winScreen.onload = this.marker.onload = this.star.onload = Canvas.counter
 
         setInterval(Canvas.changeLights, 1000)
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
@@ -188,33 +209,35 @@ export class Canvas {
     public static spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state){
         switch (state) {
             case 0: {
-                rotation += 0.03;
+                rotation += 0.05;
                 Canvas.rotate(rotation, 0)
                 rotation >= antiClockwise
-                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 15)
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 15)
+                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 20)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 20)
                 break;
             }
             case 1: {
-                rotation -= 0.03;
+                rotation -= 0.05;
                 Canvas.rotate(rotation, 0)
                 rotation <= clockwise
-                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 15)
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 15)
+                ? setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state+1)}, 20)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 20)
                 break;
             }
             case 2 : {
-                rotation += 0.03;
+                rotation += 0.05;
                 Canvas.rotate(rotation, 0)
-                rotation >= (antiClockwise2 + clockwise)
+                rotation >= (antiClockwise2 + clockwise - 0.01)
                 ? Canvas.evaluateScore(rotation)
-                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 15)
+                : setTimeout(function(){Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state)}, 20)
                 break;
             }
         }
     }
     
     public static evaluateScore(rotation){
+        // Some DRY stuff to handle here 
+        console.log(Canvas.game.boxes)
         Canvas.currentRotation = rotation
         let result = Canvas.getResult(rotation)
         if(Canvas.game.unlockedSafes.indexOf(result) === -1) {
@@ -222,11 +245,27 @@ export class Canvas {
             Canvas.openSafe(result)
             Canvas.assessWin(Canvas.game.boxes[result])
         }
+        else {
+            Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
+            Canvas.flashInterval = setInterval(Canvas.flashSpin, 500)
+            Canvas.spinning = false;
+        }
+        console.log(Canvas.game.unlockedSafes)
+    }
+
+    // may be better way to do this, new dict?
+    public static returnBox(m, boxes){
+        console.log(boxes)
+        for(let i = 0; i < boxes.length; i++) {
+            if(Canvas.game.boxes[boxes[i]] == m)
+                return boxes[i]
+        }
     }
 
     public static assessWin(m){
         if (Canvas.game.unlockedMultipliers.has(m)) {
             Canvas.handleWin()
+            Canvas.starParticles(Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length-1], Canvas.returnBox(m, Canvas.game.unlockedSafes.splice(0, Canvas.game.unlockedSafes.length-1)))
         }
         else {
             Canvas.game.unlockedMultipliers.add(m)
@@ -235,11 +274,43 @@ export class Canvas {
         }
     }
     public static handleWin(){
+        // better place to put i?
+        Canvas.spinOn = false
+
         Canvas.deleteSparks()
         clearInterval(Canvas.glowInterval)
         clearInterval(Canvas.flashInterval)
-        Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["screen"][0]*Canvas.width,  Canvas.ratios["screen"][1]*Canvas.height, Canvas.screen.width*Canvas.shrinkFactor, Canvas.screen.height*Canvas.shrinkFactor);
 
+        Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["winScreen"][0]*Canvas.width,  Canvas.ratios["winScreen"][1]*Canvas.height, Canvas.winScreen.width*Canvas.shrinkFactor, Canvas.winScreen.height*Canvas.shrinkFactor);
+
+        let fontSize = 75*Canvas.shrinkFactor
+        Canvas.context.font = `${fontSize}px unlocked`
+        // hard
+        
+        Canvas.context.fillText("WIN", Canvas.ratios["unlockedSafes"][0]*Canvas.width+20, Canvas.ratios["unlockedSafes"][1]*Canvas.height+10)
+        
+
+
+        setInterval(function(){Canvas.winSpin()}, 20)        
+    }
+
+    public static starParticles(safe1, safe2){
+        console.log(safe1)
+        console.log(safe2)
+        let s = "safe" + safe1.toString()
+
+        let st = new Star(Canvas.ratios[s][0]*Canvas.width + Canvas.starXTranslate, Canvas.ratios[s][1]*Canvas.height + Canvas.starYTranslate, 100)
+        console.log(st)
+        Canvas.context.drawImage(Canvas.star, st.x,  st.y, st.size*Canvas.shrinkFactor, st.size*Canvas.shrinkFactor)
+
+    }
+
+    public static winSpin(){
+        Canvas.drawBackgroundAndSupport()
+        Canvas.context.putImageData(Canvas.behindMarker, Canvas.ratios["marker"][0]*Canvas.width, Canvas.ratios["marker"][1]*Canvas.height)
+        Canvas.context.drawImage(Canvas.marker, Canvas.marker.width/2, 0, Canvas.marker.width/2, Canvas.marker.height, Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width*Canvas.shrinkFactor/2, Canvas.marker.height*Canvas.shrinkFactor)
+        Canvas.currentRotation = Canvas.currentRotation + 0.12
+        Canvas.rotate(Canvas.currentRotation, Canvas.dial.width/3*2)
     }
 
     public static redDial(counter){
@@ -250,9 +321,15 @@ export class Canvas {
         }
         else {
             Canvas.drawBackgroundAndSupport()
-            counter % 2 == 0
-            ? Canvas.rotate(Canvas.currentRotation, Canvas.dial.width/3)
-            : Canvas.rotate(Canvas.currentRotation, 0)
+            if (counter % 2 == 0) {
+                Canvas.rotate(Canvas.currentRotation, Canvas.dial.width/3)
+                // hard
+                Canvas.context.drawImage(Canvas.marker, 0, 0, Canvas.marker.width/2, Canvas.marker.height, Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width*Canvas.shrinkFactor/2, Canvas.marker.height*Canvas.shrinkFactor)
+            }
+            else {
+                Canvas.context.putImageData(Canvas.behindMarker, Canvas.ratios["marker"][0]*Canvas.width, Canvas.ratios["marker"][1]*Canvas.height)
+                Canvas.rotate(Canvas.currentRotation, 0)
+            }
         counter ++;
         setTimeout(function(){Canvas.redDial(counter)}, 200)
         }
@@ -270,6 +347,15 @@ export class Canvas {
         // /2 once
         Canvas.context.drawImage(image, 0, 0, image.width/2, image.height, Canvas.ratios[s][0]*Canvas.width + Canvas.priseXTranslate,  Canvas.ratios[s][1]*Canvas.height + Canvas.priseYTranslate, 
             image.width*Canvas.shrinkFactor/2, image.height*Canvas.shrinkFactor);
+
+        let fontSize = 65*Canvas.shrinkFactor
+        Canvas.context.font = `${fontSize}px unlocked`
+        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0]*Canvas.width + Canvas.fontXTranslate - 3,  Canvas.ratios[s][1]*Canvas.height + Canvas.fontYTranslate + 3)
+        Canvas.context.fillStyle = 'white'
+        // hard
+        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0]*Canvas.width + Canvas.fontXTranslate,  Canvas.ratios[s][1]*Canvas.height + Canvas.fontYTranslate)
+        Canvas.context.fillStyle = 'black'
+
     }
     
 
@@ -423,6 +509,8 @@ export class Canvas {
         // Do /3 once
         Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width/3, this.lights.height)
         Canvas.context.drawImage(this.lights, this.lights.width/3, 0, this.lights.width/3, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*Canvas.shrinkFactor/3, this.lights.height*Canvas.shrinkFactor);
+
+        Canvas.behindMarker = Canvas.context.getImageData(Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width/2, Canvas.marker.height)
 
         if(Canvas.fontsLoaded) {Canvas.writeWords()} 
 

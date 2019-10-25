@@ -30,9 +30,19 @@ export class Game{
     public setBoxes(){
         let multipliers = this.multipliers.concat(this.multipliers).concat(this.multipliers)
         for (let i = 1; i <= 8; i++){
-            this.boxes[i] = multipliers[Math.floor(Math.random()*this.multipliers.length)]
+            this.boxes[i] = multipliers[getRandomInt(multipliers.length)]
             multipliers.splice(multipliers.indexOf(this.boxes[i]), 1)
         }
         this.boxes[9] = multipliers[0]
+
+        this.boxes[1] = 15
+        this.boxes[2] = 15
+        this.boxes[3] = 15
+        this.boxes[4] = 15
+        this.boxes[5] = 15
+        this.boxes[6] = 15
+        this.boxes[7] = 15
+        this.boxes[8] = 15
+        this.boxes[9] = 15
     }
 }
