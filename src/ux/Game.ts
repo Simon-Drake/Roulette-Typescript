@@ -9,6 +9,8 @@ export class Game{
     multipliers: number[] = [];
     unlockedSafes: number[] = [];
     unlockedMultipliers: any = new Set()
+    winSafes: [number, number];
+    winImage: HTMLImageElement;
     constructor(){
         this.multipliers.push(getRandomInt(5)+15)
         this.completeMultipliers()

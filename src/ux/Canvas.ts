@@ -37,6 +37,8 @@ export class Canvas {
     public static starXTranslate: number = Canvas.fontXTranslate - 15
     public static starYTranslate: number = Canvas.fontYTranslate - 70
     public static thirdLightsWidth: number;
+    public static thirdDialWidth: number;
+
 
 
     // How far left and how far down as a ratio of the size of the Canvas
@@ -93,8 +95,9 @@ export class Canvas {
     public static count: number = Canvas.images.length;
     public static fontsLoaded: boolean = false;
     public static spinOn: boolean = true;
+    public static won: boolean = false;
     public static spinning: boolean = false;
-    public static initialDraw: boolean = false;
+    public static initialDraw: boolean = true;
     public static resizing: boolean = false;
 
 
@@ -274,8 +277,11 @@ export class Canvas {
 
     public static assessWin(m){
         if (Canvas.game.unlockedMultipliers.has(m)) {
+            Canvas.won = true
             Canvas.handleWin()
-            Canvas.starParticles(Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length-1], Canvas.returnBox(m, Canvas.game.unlockedSafes.splice(0, Canvas.game.unlockedSafes.length-1)))
+            Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length-1], Canvas.returnBox(m, Canvas.game.unlockedSafes.splice(0, Canvas.game.unlockedSafes.length-1))]
+            Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]])
+            Canvas.starParticles()
         }
         else {
             Canvas.game.unlockedMultipliers.add(m)
@@ -297,17 +303,19 @@ export class Canvas {
         Canvas.context.font = `${fontSize}px unlocked`
         // hard
         
+        // hard + shrinkFactor
         Canvas.context.fillText("WIN", Canvas.ratios["unlockedSafes"][0]*Canvas.width+20, Canvas.ratios["unlockedSafes"][1]*Canvas.height+10)
         
 
 
-        setInterval(function(){Canvas.winSpin()}, 20)        
+        setInterval(function(){Canvas.winSpin(0.18, true)}, 35)        
     }
 
-    public static starParticles(safe1, safe2){
+    public static starParticles(){
 
-        let s1 = "safe" + safe1.toString()
-        let s2 = "safe" + safe2.toString()
+        // done twice
+        let s1 = "safe" + Canvas.game.winSafes[0].toString()
+        let s2 = "safe" + Canvas.game.winSafes[1].toString()
 
         for (let i = 0; i < 10; i++){
             Canvas.stars.push(new Star(Canvas.ratios[s1][0]*Canvas.width + Canvas.starXTranslate*Canvas.shrinkFactor, Canvas.ratios[s1][1]*Canvas.height + Canvas.starYTranslate*Canvas.shrinkFactor, 20+80*Math.random()))
@@ -316,17 +324,27 @@ export class Canvas {
 
         // better way to do this?
 
-        setInterval(function(){Canvas.drawStars(Canvas.mapMultiplierToImage(Canvas.game.boxes[safe1]), s1, s2)}, 100)
+        setInterval(function(){Canvas.drawStars(true)}, 100)
 
     }
 
-    public static drawStars(image, s1, s2){
+    public static drawStars(move){
+
+        // done twice
+        let s1 = "safe" + Canvas.game.winSafes[0].toString()
+        let s2 = "safe" + Canvas.game.winSafes[1].toString()
+
+        let image = Canvas.game.winImage
 
         Canvas.drawImages()
+        Canvas.winSpin(0, false)
+        Canvas.drawLights()
 
         for (let i = 0; i < Canvas.stars.length; i++){
-            Canvas.stars[i].x += Canvas.stars[i].dx
-            Canvas.stars[i].y += Canvas.stars[i].dy
+            if(move){
+                Canvas.stars[i].x += Canvas.stars[i].dx
+                Canvas.stars[i].y += Canvas.stars[i].dy
+            }
             Canvas.context.drawImage(Canvas.star, Canvas.stars[i].x,  Canvas.stars[i].y, Canvas.stars[i].size*Canvas.shrinkFactor, Canvas.stars[i].size*Canvas.shrinkFactor)
         }
 
@@ -335,15 +353,16 @@ export class Canvas {
 
         Canvas.context.drawImage(image, 0, 0, image.width/2, image.height, Canvas.ratios[s2][0]*Canvas.width + Canvas.priseXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s2][1]*Canvas.height + Canvas.priseYTranslate*Canvas.shrinkFactor, 
             image.width*Canvas.shrinkFactor/2, image.height*Canvas.shrinkFactor);
-            
     }
 
-    public static winSpin(){
+    public static winSpin(increment, drawStars){
         Canvas.drawBackgroundAndSupport()
         Canvas.context.putImageData(Canvas.behindMarker, Canvas.ratios["marker"][0]*Canvas.width, Canvas.ratios["marker"][1]*Canvas.height)
         Canvas.context.drawImage(Canvas.marker, Canvas.marker.width/2, 0, Canvas.marker.width/2, Canvas.marker.height, Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width*Canvas.shrinkFactor/2, Canvas.marker.height*Canvas.shrinkFactor)
-        Canvas.currentRotation = Canvas.currentRotation + 0.12
-        Canvas.rotate(Canvas.currentRotation, Canvas.dial.width/3*2)
+        Canvas.currentRotation = Canvas.currentRotation + increment
+        Canvas.rotate(Canvas.currentRotation, Canvas.thirdDialWidth*2)
+        if(drawStars)
+            Canvas.drawStars(false)
     }
 
     public static redDial(counter){
@@ -355,7 +374,7 @@ export class Canvas {
         else {
             Canvas.drawBackgroundAndSupport()
             if (counter % 2 == 0) {
-                Canvas.rotate(Canvas.currentRotation, Canvas.dial.width/3)
+                Canvas.rotate(Canvas.currentRotation, Canvas.thirdDialWidth)
                 // hard
                 Canvas.context.drawImage(Canvas.marker, 0, 0, Canvas.marker.width/2, Canvas.marker.height, Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width*Canvas.shrinkFactor/2, Canvas.marker.height*Canvas.shrinkFactor)
             }
@@ -417,7 +436,7 @@ export class Canvas {
     public static rotate(rotation, xTranslate){
         Canvas.context.translate(this.centerDial[0], this.centerDial[1])
         Canvas.context.rotate(rotation)
-        Canvas.context.drawImage(this.dial, xTranslate, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width-this.centerDial[0],  Canvas.ratios["dial"][1]*Canvas.height-this.centerDial[1], this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor); 
+        Canvas.context.drawImage(this.dial, xTranslate, 0, Canvas.thirdDialWidth, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width-this.centerDial[0],  Canvas.ratios["dial"][1]*Canvas.height-this.centerDial[1], Canvas.thirdDialWidth*Canvas.shrinkFactor, this.dial.height*Canvas.shrinkFactor); 
         Canvas.context.setTransform(1,0,0,1,0,0)
         if(Canvas.spinOn){
             Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
@@ -459,8 +478,8 @@ export class Canvas {
         Canvas.count--
         if(Canvas.count === 0) {
             Canvas.thirdLightsWidth = Canvas.lights.width/3
+            Canvas.thirdDialWidth = Canvas.dial.width/3
             Canvas.sizeCanvas()
-            Canvas.initialDraw = true;
         }
     }
 
@@ -503,14 +522,13 @@ export class Canvas {
 
     public static drawImages(){
 
-
         Canvas.context.drawImage(this.background, 0, 0, Canvas.width, Canvas.height);
 
         const widthFactor = this.safe.width*Canvas.shrinkFactor
         const heightFactor = this.safe.height*Canvas.shrinkFactor
 
         // Make a loop?
-        if(!Canvas.initialDraw){
+        if(Canvas.initialDraw){
             Canvas.behindSafes["safe1"] = Canvas.context.getImageData(Canvas.ratios["safe1"][0]*Canvas.width,  Canvas.ratios["safe1"][1]*Canvas.height, widthFactor, heightFactor)
             Canvas.behindSafes["safe2"] = Canvas.context.getImageData(Canvas.ratios["safe2"][0]*Canvas.width,  Canvas.ratios["safe2"][1]*Canvas.height, widthFactor, heightFactor)
             Canvas.behindSafes["safe3"] = Canvas.context.getImageData(Canvas.ratios["safe3"][0]*Canvas.width,  Canvas.ratios["safe3"][1]*Canvas.height, widthFactor, heightFactor)
@@ -519,7 +537,7 @@ export class Canvas {
             Canvas.behindSafes["safe6"] = Canvas.context.getImageData(Canvas.ratios["safe6"][0]*Canvas.width,  Canvas.ratios["safe6"][1]*Canvas.height, widthFactor, heightFactor)
             Canvas.behindSafes["safe7"] = Canvas.context.getImageData(Canvas.ratios["safe7"][0]*Canvas.width,  Canvas.ratios["safe7"][1]*Canvas.height, widthFactor, heightFactor)
             Canvas.behindSafes["safe8"] = Canvas.context.getImageData(Canvas.ratios["safe8"][0]*Canvas.width,  Canvas.ratios["safe8"][1]*Canvas.height, widthFactor, heightFactor)
-            Canvas.behindSafes["safe9"] = Canvas.context.getImageData(Canvas.ratios["safe9"][0]*Canvas.width,  Canvas.ratios["safe9"][1]*Canvas.height, widthFactor, heightFactor)
+            Canvas.behindSafes["safe9"] = Canvas.context.getImageData(Canvas.ratios["safe9"][0]*Canvas.width,  Canvas.ratios["safe9"][1]*Canvas.height, widthFactor, heightFactor)   
         }
 
         for (let i = 1; i <=9; i++){
@@ -530,33 +548,33 @@ export class Canvas {
         }
 
 
-        Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
+        if(!Canvas.won){
+            Canvas.context.drawImage(this.supportDial, Canvas.ratios["supportDial"][0]*Canvas.width,  Canvas.ratios["supportDial"][1]*Canvas.height, this.supportDial.width*Canvas.shrinkFactor, this.supportDial.height*Canvas.shrinkFactor);
+            Canvas.context.drawImage(this.dial, 0, 0, Canvas.thirdDialWidth, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width,  Canvas.ratios["dial"][1]*Canvas.height, Canvas.thirdDialWidth*Canvas.shrinkFactor, this.dial.height*Canvas.shrinkFactor);
+        }
 
-        Canvas.context.drawImage(this.dial, 0, 0, this.dial.width/3, this.dial.height, Canvas.ratios["dial"][0]*Canvas.width,  Canvas.ratios["dial"][1]*Canvas.height, this.dial.width*Canvas.shrinkFactor/3, this.dial.height*Canvas.shrinkFactor);
+        if(Canvas.initialDraw){
+            Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.thirdLightsWidth, this.lights.height)
+            Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.thirdLightsWidth, this.lights.height)    
+            Canvas.behindSpin = Canvas.context.getImageData(Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width, this.spin.height)
+            Canvas.behindMarker = Canvas.context.getImageData(Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width/2, Canvas.marker.height)
+        }
 
-        Canvas.behindSpin = Canvas.context.getImageData(Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width, this.spin.height)
-        Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
-
-        // Do once
-        // draw image under support dial?
-        Canvas.behindLightsOne = Canvas.context.getImageData(Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.thirdLightsWidth, this.lights.height)
-        Canvas.context.drawImage(this.lights, 0, 0, Canvas.thirdLightsWidth, this.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, this.lights.width*Canvas.shrinkFactor/3, this.lights.height*Canvas.shrinkFactor);
-
-        // Do /3 once
-        Canvas.behindLightsTwo = Canvas.context.getImageData(Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.thirdLightsWidth, this.lights.height)
-        Canvas.context.drawImage(this.lights, Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, this.lights.width*Canvas.shrinkFactor/3, this.lights.height*Canvas.shrinkFactor);
-
-        Canvas.behindMarker = Canvas.context.getImageData(Canvas.ratios["marker"][0]*Canvas.width,  Canvas.ratios["marker"][1]*Canvas.height, Canvas.marker.width/2, Canvas.marker.height)
+        if(!Canvas.won){
+            Canvas.context.drawImage(this.spin, Canvas.ratios["spin"][0]*Canvas.width,  Canvas.ratios["spin"][1]*Canvas.height, this.spin.width*Canvas.shrinkFactor, this.spin.height*Canvas.shrinkFactor);
+            Canvas.context.drawImage(this.lights, 0, 0, Canvas.thirdLightsWidth, this.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, this.lights.height*Canvas.shrinkFactor);
+            Canvas.context.drawImage(this.lights, Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, this.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, this.lights.height*Canvas.shrinkFactor);
+        }
 
         if(Canvas.fontsLoaded) {Canvas.writeWords()} 
 
-        // Right place?
-        Canvas.setDimensions()
-
+        if(Canvas.resizing || Canvas.initialDraw) {
+            Canvas.setDimensions()
+            Canvas.initialDraw = false;
+        }
     }
 
     public static setDimensions(){
-
         Canvas.radiusSupport = (this.supportDial.width-15)/2*Canvas.shrinkFactor
         Canvas.radiusSpin = this.spin.width/2*Canvas.shrinkFactor
         Canvas.radiusDial = Canvas.radiusSupport*0.9
@@ -568,11 +586,7 @@ export class Canvas {
 
     // Can we do change lights with save and restore? What is more expensive?
     public static changeLights() {
-        Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0]*Canvas.width, Canvas.ratios["lights1"][1]*Canvas.height)
-        Canvas.context.putImageData(Canvas.behindLightsTwo, Canvas.ratios["lights2"][0]*Canvas.width, Canvas.ratios["lights2"][1]*Canvas.height)
-
-        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, Canvas.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, Canvas.lights.height*Canvas.shrinkFactor);
-        Canvas.context.drawImage(Canvas.lights, Canvas.xLights2*Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, Canvas.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, Canvas.lights.height*Canvas.shrinkFactor);
+        Canvas.drawLights()
         // Change the sx translation for both lights
         Canvas.xLights1 < 2 
             ? Canvas.xLights1 ++ 
@@ -581,6 +595,14 @@ export class Canvas {
         Canvas.xLights2 < 2 
             ? Canvas.xLights2 ++ 
             : Canvas.xLights2 = 0
+    }
+
+    public static drawLights(){
+        Canvas.context.putImageData(Canvas.behindLightsOne, Canvas.ratios["lights1"][0]*Canvas.width, Canvas.ratios["lights1"][1]*Canvas.height)
+        Canvas.context.putImageData(Canvas.behindLightsTwo, Canvas.ratios["lights2"][0]*Canvas.width, Canvas.ratios["lights2"][1]*Canvas.height)
+
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights1*Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, Canvas.lights.height, Canvas.ratios["lights1"][0]*Canvas.width,  Canvas.ratios["lights1"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, Canvas.lights.height*Canvas.shrinkFactor);
+        Canvas.context.drawImage(Canvas.lights, Canvas.xLights2*Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, Canvas.lights.height, Canvas.ratios["lights2"][0]*Canvas.width,  Canvas.ratios["lights2"][1]*Canvas.height, Canvas.thirdLightsWidth*Canvas.shrinkFactor, Canvas.lights.height*Canvas.shrinkFactor);
     }
 
     // decrease radius. some are on outer grip
@@ -671,10 +693,12 @@ export class Canvas {
         }
     }
 
+    // clip larger area so you don't get the line half way through
     public static drawBackgroundAndSupport(){
         // can implement DRY morE?
         // if change radius change increment
         // I shouldnt have to clip twice
+        Canvas.drawLights()
         Canvas.context.save();
         Canvas.context.beginPath();
         Canvas.context.arc(Canvas.centerSupport[0], Canvas.centerSupport[1], Canvas.radiusSupport+15, 0, Math.PI * 2);
