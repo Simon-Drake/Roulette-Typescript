@@ -18,8 +18,8 @@ export class Star{
         this.x = x
         this.y = y
         this.source = [x,y]
-        this.dx = this.randomDirection() * (getRandomInt(3) + 1)
-        this.dy = this.randomDirection() * (getRandomInt(3) + 1)
+        this.dx = this.randomDirection() * (getRandomInt(5) + 2)
+        this.dy = this.randomDirection() * (getRandomInt(5) + 2)
         // -0.5 to clamp rotations and put on both sides of 0
         this.drotation = Math.random() - 0.5
         this.size = size

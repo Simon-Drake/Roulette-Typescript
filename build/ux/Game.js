@@ -13,6 +13,7 @@ function getRandomInt(max) {
 }
 export class Game {
     constructor() {
+        this.bet = 10;
         this.boxes = {};
         this.spins = 0;
         this.multipliers = [];
@@ -51,14 +52,14 @@ export class Game {
             multipliers.splice(multipliers.indexOf(this.boxes[i]), 1);
         }
         this.boxes[9] = multipliers[0];
-        this.boxes[1] = 15;
-        this.boxes[2] = 15;
-        this.boxes[3] = 15;
-        this.boxes[4] = 15;
-        this.boxes[5] = 15;
-        this.boxes[6] = 15;
-        this.boxes[7] = 15;
-        this.boxes[8] = 15;
-        this.boxes[9] = 15;
+        // this.boxes[1] = 15
+        // this.boxes[2] = 15
+        // this.boxes[3] = 15
+        // this.boxes[4] = 15
+        // this.boxes[5] = 15
+        // this.boxes[6] = 15
+        // this.boxes[7] = 15
+        // this.boxes[8] = 15
+        // this.boxes[9] = 15
     }
 }

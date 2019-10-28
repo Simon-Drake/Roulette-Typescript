@@ -266,7 +266,6 @@ export class Canvas {
     
     public static evaluateScore(rotation){
         Canvas.game.state = Canvas.game.states["SPUN"]
-
         // Some DRY stuff to handle here 
         Canvas.currentRotation = rotation
         let result = Canvas.getResult(rotation)
@@ -279,6 +278,7 @@ export class Canvas {
             Canvas.glowInterval = setInterval(Canvas.supportGlow, 450)
             Canvas.flashInterval = setInterval(Canvas.flashSpin, 500)
         }
+        Canvas.writeWords(110)
     }
 
     // may be better way to do this, new dict?
@@ -298,7 +298,7 @@ export class Canvas {
             Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]])
             Canvas.starParticles()
             setInterval(function(){Canvas.drawStars(true)}, 100)
-            setInterval(function(){Canvas.changeSX()}, 600)
+            setInterval(function(){Canvas.changeSX()}, 400)
             setTimeout(function(){setInterval(function(){Canvas.changeScale()}, 30)}, 3000)
             setInterval(function(){Canvas.starParticles()}, 2500)
 
@@ -374,7 +374,7 @@ export class Canvas {
 
         for (let i = 0; i < Canvas.stars.length; i++){
             if (Canvas.stars[i]) {
-                if (Canvas.stars[i].distanceFromSource > 190) {
+                if (Canvas.stars[i].distanceFromSource > 195) {
                     delete Canvas.stars[i]
                 }
                 else {
@@ -427,7 +427,10 @@ export class Canvas {
         let centerY = star.y + star.size*Canvas.shrinkFactor/2
         Canvas.context.translate(centerX, centerY)
         Canvas.context.rotate(star.rotation)
-        Canvas.context.globalAlpha = Math.sqrt(-star.distanceFromSource+200)/14.2
+        let gA = Math.sqrt(-star.distanceFromSource+200)/9
+        gA > 1
+            ? Canvas.context.globalAlpha = 1
+            : Canvas.context.globalAlpha = gA
         Canvas.context.drawImage(Canvas.star, star.x - centerX,  star.y - centerY, star.size*Canvas.shrinkFactor, star.size*Canvas.shrinkFactor)
         Canvas.context.setTransform(1,0,0,1,0,0)
         Canvas.context.globalAlpha = 1
@@ -468,8 +471,7 @@ export class Canvas {
         let s = "safe" + result.toString()
 
         // better?
-        if(!Canvas.game.state == Canvas.game.states["WIN"])
-            Canvas.writeWords(110)
+        // Canvas.writeWords(110)
 
         // need to scale for browser resize
         Canvas.context.putImageData(Canvas.behindSafes[s], Canvas.ratios[s][0]*Canvas.width, Canvas.ratios[s][1]*Canvas.height)
@@ -565,10 +567,14 @@ export class Canvas {
                 break;
             }
             case Canvas.game.states["WON"] :{
+
                 Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["winScreen"][0]*Canvas.width,  Canvas.ratios["winScreen"][1]*Canvas.height, Canvas.winScreen.width*Canvas.shrinkFactor, Canvas.winScreen.height*Canvas.shrinkFactor);
                 Canvas.context.font = `${fontSize}px unlocked`
                 // hard + shrinkFactor
                 Canvas.context.fillText("WIN", Canvas.ratios["unlockedSafes"][0]*Canvas.width+20, Canvas.ratios["unlockedSafes"][1]*Canvas.height+10)
+                Canvas.context.font = `${110}px instructions`
+                let amountWon = Canvas.game.boxes[Canvas.game.winSafes[0]]*Canvas.game.bet
+                Canvas.context.fillText(`YOU WIN £${amountWon}!`, Canvas.ratios["spinning"][0]*Canvas.width-65, Canvas.ratios["spinning"][1]*Canvas.height)
                 break;
             }
         }
