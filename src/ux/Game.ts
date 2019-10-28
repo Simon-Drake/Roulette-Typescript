@@ -11,6 +11,14 @@ export class Game{
     unlockedMultipliers: any = new Set()
     winSafes: [number, number];
     winImage: HTMLImageElement;
+    state: number
+    states: object = {
+        "ZERO_SPINS" : 0,
+        "SPINNING" : 1,
+        "SPUN" : 2,
+        "WON" : 3, 
+        "LOST" : 4
+    }
     constructor(){
         this.multipliers.push(getRandomInt(5)+15)
         this.completeMultipliers()

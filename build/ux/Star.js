@@ -4,10 +4,15 @@ function getRandomInt(max) {
 }
 export class Star {
     constructor(x, y, size) {
+        this.rotation = 0;
+        this.distanceFromSource = 0;
         this.x = x;
         this.y = y;
-        this.dx = this.randomDirection();
-        this.dy = this.randomDirection();
+        this.source = [x, y];
+        this.dx = this.randomDirection() * (getRandomInt(3) + 1);
+        this.dy = this.randomDirection() * (getRandomInt(3) + 1);
+        // -0.5 to clamp rotations and put on both sides of 0
+        this.drotation = Math.random() - 0.5;
         this.size = size;
     }
     randomDirection() {

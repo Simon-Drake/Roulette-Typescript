@@ -48,7 +48,7 @@ export class Canvas {
         });
         // need to add if clicks again while spinning do nothing
         el.addEventListener('click', function (e) {
-            if (!Canvas.spinning)
+            if (Canvas.game.state == Canvas.game.states["ZERO_SPINS"] || Canvas.game.state == Canvas.game.states["SPUN"])
                 Canvas.intersect(e.offsetX, e.offsetY);
         });
         Canvas.context = el.getContext("2d");
@@ -58,12 +58,13 @@ export class Canvas {
         setInterval(Canvas.changeLights, 1000);
         Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
         Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+        Canvas.game.state = Canvas.game.states["ZERO_SPINS"];
     }
     /// JUST A COMMMENT : need to play with radiuses still, some sparks is getting left ourside
     static intersect(x, y) {
         let inside = Math.sqrt(Math.pow((Canvas.centerSupport[0] - x), 2) + Math.pow((Canvas.centerSupport[1] - y), 2)) < Canvas.radiusSpin;
         if (inside) {
-            Canvas.spinning = true;
+            Canvas.game.state = Canvas.game.states["SPINNING"];
             Canvas.spinOn = false;
             Canvas.game.spins += 1;
             // delete all current sparks
@@ -77,6 +78,7 @@ export class Canvas {
             antiClockwise
                 ? state = 0
                 : state = 1;
+            Canvas.writeWords(110);
             Canvas.spinWheel(Canvas.currentRotation, antiClockwise, -Canvas.degToRadians(360 / 9 * getRandomInt(9)), Canvas.degToRadians(360 / 9 * getRandomInt(9)), state);
         }
     }
@@ -123,6 +125,7 @@ export class Canvas {
         }
     }
     static evaluateScore(rotation) {
+        Canvas.game.state = Canvas.game.states["SPUN"];
         // Some DRY stuff to handle here 
         Canvas.currentRotation = rotation;
         let result = Canvas.getResult(rotation);
@@ -134,7 +137,6 @@ export class Canvas {
         else {
             Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
             Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
-            Canvas.spinning = false;
         }
     }
     // may be better way to do this, new dict?
@@ -146,15 +148,17 @@ export class Canvas {
     }
     static assessWin(m) {
         if (Canvas.game.unlockedMultipliers.has(m)) {
+            Canvas.game.state = Canvas.game.states["WON"];
             Canvas.won = true;
             Canvas.handleWin();
             Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length - 1], Canvas.returnBox(m, Canvas.game.unlockedSafes.splice(0, Canvas.game.unlockedSafes.length - 1))];
             Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]]);
             Canvas.starParticles();
+            setInterval(function () { Canvas.drawStars(true); }, 100);
+            setInterval(function () { Canvas.starParticles(); }, 2500);
         }
         else {
             Canvas.game.unlockedMultipliers.add(m);
-            Canvas.writeWords();
             Canvas.redDial(0);
         }
     }
@@ -164,40 +168,60 @@ export class Canvas {
         Canvas.deleteSparks();
         clearInterval(Canvas.glowInterval);
         clearInterval(Canvas.flashInterval);
-        Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["winScreen"][0] * Canvas.width, Canvas.ratios["winScreen"][1] * Canvas.height, Canvas.winScreen.width * Canvas.shrinkFactor, Canvas.winScreen.height * Canvas.shrinkFactor);
-        let fontSize = 75 * Canvas.shrinkFactor;
-        Canvas.context.font = `${fontSize}px unlocked`;
-        // hard
-        Canvas.context.fillText("WIN", Canvas.ratios["unlockedSafes"][0] * Canvas.width + 20, Canvas.ratios["unlockedSafes"][1] * Canvas.height + 10);
+        Canvas.writeWords(75);
         setInterval(function () { Canvas.winSpin(0.18, true); }, 35);
     }
     static starParticles() {
         // done twice
         let s1 = "safe" + Canvas.game.winSafes[0].toString();
         let s2 = "safe" + Canvas.game.winSafes[1].toString();
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             Canvas.stars.push(new Star(Canvas.ratios[s1][0] * Canvas.width + Canvas.starXTranslate * Canvas.shrinkFactor, Canvas.ratios[s1][1] * Canvas.height + Canvas.starYTranslate * Canvas.shrinkFactor, 20 + 80 * Math.random()));
             Canvas.stars.push(new Star(Canvas.ratios[s2][0] * Canvas.width + Canvas.starXTranslate * Canvas.shrinkFactor, Canvas.ratios[s2][1] * Canvas.height + Canvas.starYTranslate * Canvas.shrinkFactor, 20 + 80 * Math.random()));
         }
-        // better way to do this?
-        setInterval(function () { Canvas.drawStars(true); }, 100);
+    }
+    static fillCanvasColour() {
+        Canvas.context.fillStyle = 'silver';
+        Canvas.context.fillRect(0, 0, Canvas.width, Canvas.height);
     }
     static drawStars(move) {
         // done twice
         let s1 = "safe" + Canvas.game.winSafes[0].toString();
         let s2 = "safe" + Canvas.game.winSafes[1].toString();
         let image = Canvas.game.winImage;
+        Canvas.fillCanvasColour();
         Canvas.drawImages();
         Canvas.winSpin(0, false);
+        Canvas.drawLights();
+        Canvas.writeWords(75);
         for (let i = 0; i < Canvas.stars.length; i++) {
-            if (move) {
-                Canvas.stars[i].x += Canvas.stars[i].dx;
-                Canvas.stars[i].y += Canvas.stars[i].dy;
+            if (Canvas.stars[i]) {
+                if (Canvas.stars[i].distanceFromSource > 190) {
+                    delete Canvas.stars[i];
+                }
+                else {
+                    if (move) {
+                        Canvas.stars[i].x += Canvas.stars[i].dx;
+                        Canvas.stars[i].y += Canvas.stars[i].dy;
+                        Canvas.stars[i].rotation += Canvas.stars[i].drotation;
+                        Canvas.stars[i].distanceFromSource = Math.sqrt(Math.pow((Canvas.stars[i].x - Canvas.stars[i].source[0]), 2) + Math.pow((Canvas.stars[i].y - Canvas.stars[i].source[1]), 2));
+                    }
+                    Canvas.rotateStar(Canvas.stars[i]);
+                }
             }
-            Canvas.context.drawImage(Canvas.star, Canvas.stars[i].x, Canvas.stars[i].y, Canvas.stars[i].size * Canvas.shrinkFactor, Canvas.stars[i].size * Canvas.shrinkFactor);
         }
         Canvas.context.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.ratios[s1][0] * Canvas.width + Canvas.priseXTranslate * Canvas.shrinkFactor, Canvas.ratios[s1][1] * Canvas.height + Canvas.priseYTranslate * Canvas.shrinkFactor, image.width * Canvas.shrinkFactor / 2, image.height * Canvas.shrinkFactor);
         Canvas.context.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.ratios[s2][0] * Canvas.width + Canvas.priseXTranslate * Canvas.shrinkFactor, Canvas.ratios[s2][1] * Canvas.height + Canvas.priseYTranslate * Canvas.shrinkFactor, image.width * Canvas.shrinkFactor / 2, image.height * Canvas.shrinkFactor);
+    }
+    static rotateStar(star) {
+        let centerX = star.x + star.size * Canvas.shrinkFactor / 2;
+        let centerY = star.y + star.size * Canvas.shrinkFactor / 2;
+        Canvas.context.translate(centerX, centerY);
+        Canvas.context.rotate(star.rotation);
+        Canvas.context.globalAlpha = star.distanceFromSource * -0.005 + 1;
+        Canvas.context.drawImage(Canvas.star, star.x - centerX, star.y - centerY, star.size * Canvas.shrinkFactor, star.size * Canvas.shrinkFactor);
+        Canvas.context.setTransform(1, 0, 0, 1, 0, 0);
+        Canvas.context.globalAlpha = 1;
     }
     static winSpin(increment, drawStars) {
         Canvas.drawBackgroundAndSupport();
@@ -212,7 +236,6 @@ export class Canvas {
         if (counter == 10) {
             Canvas.glowInterval = setInterval(Canvas.supportGlow, 450);
             Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
-            Canvas.spinning = false;
         }
         else {
             Canvas.drawBackgroundAndSupport();
@@ -231,6 +254,7 @@ export class Canvas {
     }
     static openSafe(result) {
         let s = "safe" + result.toString();
+        Canvas.writeWords(110);
         // need to scale for browser resize
         Canvas.context.putImageData(Canvas.behindSafes[s], Canvas.ratios[s][0] * Canvas.width, Canvas.ratios[s][1] * Canvas.height);
         Canvas.context.drawImage(Canvas.safeOpen, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate * Canvas.shrinkFactor, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate * Canvas.shrinkFactor, Canvas.safeOpen.width * Canvas.shrinkFactor, Canvas.safeOpen.height * Canvas.shrinkFactor);
@@ -282,17 +306,46 @@ export class Canvas {
             document.fonts.add(unl);
             document.fonts.add(inst);
             Canvas.fontsLoaded = true;
-            Canvas.writeWords();
+            // hard
+            Canvas.writeWords(45);
         });
     }
-    static writeWords() {
-        Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
-        let fontSize = 45 * Canvas.shrinkFactor;
+    // 45 or 110 or 75
+    static writeWords(fSize) {
+        let fontSize = fSize * Canvas.shrinkFactor;
         Canvas.context.font = `${fontSize}px instructions`;
-        Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
-        Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
-        Canvas.context.font = `${fontSize}px unlocked`;
-        Canvas.context.fillText(Canvas.getUnlockedSafesString(), Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
+        switch (Canvas.game.state) {
+            case Canvas.game.states["ZERO_SPINS"]: {
+                Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
+                Canvas.context.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.ratios["instructionsTop"][0] * Canvas.width, Canvas.ratios["instructionsTop"][1] * Canvas.height);
+                Canvas.context.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.ratios["instructionsBottom"][0] * Canvas.width, Canvas.ratios["instructionsBottom"][1] * Canvas.height);
+                Canvas.context.font = `${fontSize}px unlocked`;
+                Canvas.context.fillText("-   -   -   -", Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
+                break;
+            }
+            case Canvas.game.states["SPINNING"]: {
+                Canvas.context.putImageData(this.behindInstructions, Canvas.ratios["instructions"][0] * Canvas.width, Canvas.ratios["instructions"][1] * Canvas.height);
+                Canvas.context.fillText('SPINNING!', Canvas.ratios["spinning"][0] * Canvas.width, Canvas.ratios["spinning"][1] * Canvas.height);
+                break;
+            }
+            case Canvas.game.states["SPUN"]: {
+                Canvas.context.putImageData(this.behindInstructions, Canvas.ratios["instructions"][0] * Canvas.width, Canvas.ratios["instructions"][1] * Canvas.height);
+                Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
+                // hard and shrink
+                Canvas.context.fillText("SAFE" + Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length - 1].toString(), Canvas.ratios["spinning"][0] * Canvas.width + 63, Canvas.ratios["spinning"][1] * Canvas.height);
+                // hard
+                Canvas.context.font = `${45}px unlocked`;
+                Canvas.context.fillText(Canvas.getUnlockedSafesString(), Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);
+                break;
+            }
+            case Canvas.game.states["WON"]: {
+                Canvas.context.drawImage(Canvas.winScreen, Canvas.ratios["winScreen"][0] * Canvas.width, Canvas.ratios["winScreen"][1] * Canvas.height, Canvas.winScreen.width * Canvas.shrinkFactor, Canvas.winScreen.height * Canvas.shrinkFactor);
+                Canvas.context.font = `${fontSize}px unlocked`;
+                // hard + shrinkFactor
+                Canvas.context.fillText("WIN", Canvas.ratios["unlockedSafes"][0] * Canvas.width + 20, Canvas.ratios["unlockedSafes"][1] * Canvas.height + 10);
+                break;
+            }
+        }
     }
     static getUnlockedSafesString() {
         let s = '';
@@ -352,6 +405,8 @@ export class Canvas {
         const heightFactor = this.safe.height * Canvas.shrinkFactor;
         // Make a loop?
         if (Canvas.initialDraw) {
+            // hard code and shrink
+            Canvas.behindInstructions = Canvas.context.getImageData(Canvas.ratios["instructions"][0] * Canvas.width, Canvas.ratios["instructions"][1] * Canvas.height, 800, 90);
             Canvas.behindSafes["safe1"] = Canvas.context.getImageData(Canvas.ratios["safe1"][0] * Canvas.width, Canvas.ratios["safe1"][1] * Canvas.height, widthFactor, heightFactor);
             Canvas.behindSafes["safe2"] = Canvas.context.getImageData(Canvas.ratios["safe2"][0] * Canvas.width, Canvas.ratios["safe2"][1] * Canvas.height, widthFactor, heightFactor);
             Canvas.behindSafes["safe3"] = Canvas.context.getImageData(Canvas.ratios["safe3"][0] * Canvas.width, Canvas.ratios["safe3"][1] * Canvas.height, widthFactor, heightFactor);
@@ -384,7 +439,7 @@ export class Canvas {
             Canvas.context.drawImage(this.lights, Canvas.thirdLightsWidth, 0, Canvas.thirdLightsWidth, this.lights.height, Canvas.ratios["lights2"][0] * Canvas.width, Canvas.ratios["lights2"][1] * Canvas.height, Canvas.thirdLightsWidth * Canvas.shrinkFactor, this.lights.height * Canvas.shrinkFactor);
         }
         if (Canvas.fontsLoaded) {
-            Canvas.writeWords();
+            Canvas.writeWords(45);
         }
         if (Canvas.resizing || Canvas.initialDraw) {
             Canvas.setDimensions();
@@ -444,7 +499,7 @@ export class Canvas {
         });
     }
     static drawSparks(index) {
-        if (!Canvas.spinning && !Canvas.resizing) {
+        if (Canvas.game.state == Canvas.game.states["ZERO_SPINS"] || Canvas.game.state == Canvas.game.states["SPUN"] && !Canvas.resizing) {
             const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
             Canvas.drawBackgroundAndSupport();
             Canvas.rotate(Canvas.currentRotation, 0);
@@ -475,7 +530,7 @@ export class Canvas {
         // }
     }
     static removeSpark(index) {
-        if (!Canvas.spinning && !Canvas.resizing) {
+        if (Canvas.game.state == Canvas.game.states["ZERO_SPINS"] || Canvas.game.state == Canvas.game.states["SPUN"] && !Canvas.resizing) {
             const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
             if (Canvas.sparks[index].size == 0) {
                 for (let i = index; i <= index + 7; i++) {
@@ -559,6 +614,8 @@ Canvas.ratios = {
     "spin": [(695 / Canvas.maxWidth), (420 / Canvas.maxHeight)],
     "lights1": [(582 / Canvas.maxWidth), (270 / Canvas.maxHeight)],
     "lights2": [(758 / Canvas.maxWidth), (270 / Canvas.maxHeight)],
+    "spinning": [(270 / Canvas.maxWidth), (115 / Canvas.maxHeight)],
+    "instructions": [(65 / Canvas.maxWidth), (30 / Canvas.maxHeight)],
     "instructionsTop": [(68 / Canvas.maxWidth), (65 / Canvas.maxHeight)],
     "instructionsBottom": [(68 / Canvas.maxWidth), (110 / Canvas.maxHeight)],
     "unlockedSafes": [(642 / Canvas.maxWidth), (243 / Canvas.maxHeight)]

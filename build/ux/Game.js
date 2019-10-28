@@ -18,6 +18,13 @@ export class Game {
         this.multipliers = [];
         this.unlockedSafes = [];
         this.unlockedMultipliers = new Set();
+        this.states = {
+            "ZERO_SPINS": 0,
+            "SPINNING": 1,
+            "SPUN": 2,
+            "WON": 3,
+            "LOST": 4
+        };
         this.multipliers.push(getRandomInt(5) + 15);
         this.completeMultipliers();
     }

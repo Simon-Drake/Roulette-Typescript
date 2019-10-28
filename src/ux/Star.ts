@@ -7,14 +7,21 @@ export class Star{
     // access modifier?
     x: number;
     y: number;
+    rotation: number = 0;
     dx: number;
     dy: number;
+    drotation: number
     size: number;
+    source: [number, number];
+    distanceFromSource: number = 0;
     constructor( x, y, size){
         this.x = x
         this.y = y
-        this.dx = this.randomDirection()
-        this.dy = this.randomDirection()
+        this.source = [x,y]
+        this.dx = this.randomDirection() * (getRandomInt(3) + 1)
+        this.dy = this.randomDirection() * (getRandomInt(3) + 1)
+        // -0.5 to clamp rotations and put on both sides of 0
+        this.drotation = Math.random() - 0.5
         this.size = size
     }
 
