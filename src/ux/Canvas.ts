@@ -38,6 +38,7 @@ export class Canvas {
     public static starYTranslate: number = Canvas.fontYTranslate - 70
     public static thirdLightsWidth: number;
     public static thirdDialWidth: number;
+    public static blackFont: number = 4
 
 
 
@@ -95,6 +96,7 @@ export class Canvas {
 
         // Runtime state variables
     public static count: number = Canvas.images.length;
+    public static scale: number = 1
     public static fontsLoaded: boolean = false;
     public static spinOn: boolean = true;
     public static won: boolean = false;
@@ -116,6 +118,8 @@ export class Canvas {
     public static sparks: Spark[] = [];
     public static stars: Star[] = [];
     public static currentRotation: number = 0;
+    public static scaleDirection: number = 1;
+
     public static game: Game;
 
 
@@ -290,10 +294,12 @@ export class Canvas {
             Canvas.game.state = Canvas.game.states["WON"]
             Canvas.won = true
             Canvas.handleWin()
-            Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length-1], Canvas.returnBox(m, Canvas.game.unlockedSafes.splice(0, Canvas.game.unlockedSafes.length-1))]
+            Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length-1], Canvas.returnBox(m, Canvas.game.unlockedSafes)]
             Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]])
             Canvas.starParticles()
             setInterval(function(){Canvas.drawStars(true)}, 100)
+            setInterval(function(){Canvas.changeSX()}, 600)
+            setTimeout(function(){setInterval(function(){Canvas.changeScale()}, 30)}, 3000)
             setInterval(function(){Canvas.starParticles()}, 2500)
 
         }
@@ -302,6 +308,24 @@ export class Canvas {
             Canvas.redDial(0)
         }
     }
+
+    public static changeSX(){
+        Canvas.game.winImageSX == 0
+            ? Canvas.game.winImageSX = Canvas.game.winImage.width/2
+            : Canvas.game.winImageSX = 0
+    }
+
+    public static changeScale(){
+        console.log(Canvas.scale)
+        Canvas.scale += 0.05 * Canvas.scaleDirection
+
+        if(Canvas.scale > 1.4)
+            Canvas.scaleDirection = -1
+
+        if(Canvas.scale <= 1)
+            Canvas.scaleDirection = +1
+    }
+
     public static handleWin(){
         // better place to put i?
         Canvas.spinOn = false
@@ -311,7 +335,7 @@ export class Canvas {
         clearInterval(Canvas.flashInterval)
 
 
-        Canvas.writeWords(75)
+        // Canvas.writeWords(75)
 
         setInterval(function(){Canvas.winSpin(0.18, true)}, 35)        
     }
@@ -365,11 +389,37 @@ export class Canvas {
             }
         }
 
-        Canvas.context.drawImage(image, 0, 0, image.width/2, image.height, Canvas.ratios[s1][0]*Canvas.width + Canvas.priseXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s1][1]*Canvas.height + Canvas.priseYTranslate*Canvas.shrinkFactor, 
-            image.width*Canvas.shrinkFactor/2, image.height*Canvas.shrinkFactor);
+        let s1x = Canvas.ratios[s1][0]*Canvas.width + Canvas.priseXTranslate*Canvas.shrinkFactor
+        let s1y = Canvas.ratios[s1][1]*Canvas.height + Canvas.priseYTranslate*Canvas.shrinkFactor
+        let s2x = Canvas.ratios[s2][0]*Canvas.width + Canvas.priseXTranslate*Canvas.shrinkFactor
+        let s2y = Canvas.ratios[s2][1]*Canvas.height + Canvas.priseYTranslate*Canvas.shrinkFactor
+        let scale = Canvas.scale
 
-        Canvas.context.drawImage(image, 0, 0, image.width/2, image.height, Canvas.ratios[s2][0]*Canvas.width + Canvas.priseXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s2][1]*Canvas.height + Canvas.priseYTranslate*Canvas.shrinkFactor, 
-            image.width*Canvas.shrinkFactor/2, image.height*Canvas.shrinkFactor);
+        Canvas.context.drawImage(image, Canvas.game.winImageSX, 0, image.width/2, image.height, s1x-image.width*(scale-1)/4, s1y-image.height*(scale-1)/2, 
+            scale*image.width*Canvas.shrinkFactor/2, scale*image.height*Canvas.shrinkFactor);
+
+        Canvas.context.drawImage(image, Canvas.game.winImageSX, 0, image.width/2, image.height, s2x-image.width*(scale-1)/4, s2y-image.height*(scale-1)/2, 
+            scale*image.width*Canvas.shrinkFactor/2, scale*image.height*Canvas.shrinkFactor);
+
+        if(Canvas.game.winImageSX > 0) {
+            // done Twice put in method
+            let fontSize = 65*Canvas.shrinkFactor*scale
+            Canvas.context.font = `${fontSize}px unlocked`
+            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[0]]}`, Canvas.ratios[s1][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor - Canvas.blackFont*Canvas.shrinkFactor,  Canvas.ratios[s1][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor + Canvas.blackFont*Canvas.shrinkFactor)
+            Canvas.context.fillStyle = 'white'
+            // hard
+            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[0]]}`, Canvas.ratios[s1][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s1][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor)
+            Canvas.context.fillStyle = 'black'
+
+            // done Twice put in method
+            Canvas.context.font = `${fontSize}px unlocked`
+            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[1]]}`, Canvas.ratios[s2][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor - Canvas.blackFont*Canvas.shrinkFactor,  Canvas.ratios[s2][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor + Canvas.blackFont*Canvas.shrinkFactor)
+            Canvas.context.fillStyle = 'white'
+            // hard
+            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[1]]}`, Canvas.ratios[s2][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s2][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor)
+            Canvas.context.fillStyle = 'black'
+        }
+
     }
 
     public static rotateStar(star){
@@ -377,7 +427,7 @@ export class Canvas {
         let centerY = star.y + star.size*Canvas.shrinkFactor/2
         Canvas.context.translate(centerX, centerY)
         Canvas.context.rotate(star.rotation)
-        Canvas.context.globalAlpha = star.distanceFromSource*-0.005 + 1
+        Canvas.context.globalAlpha = Math.sqrt(-star.distanceFromSource+200)/14.2
         Canvas.context.drawImage(Canvas.star, star.x - centerX,  star.y - centerY, star.size*Canvas.shrinkFactor, star.size*Canvas.shrinkFactor)
         Canvas.context.setTransform(1,0,0,1,0,0)
         Canvas.context.globalAlpha = 1
@@ -417,7 +467,9 @@ export class Canvas {
     public static openSafe(result){
         let s = "safe" + result.toString()
 
-        Canvas.writeWords(110)
+        // better?
+        if(!Canvas.game.state == Canvas.game.states["WIN"])
+            Canvas.writeWords(110)
 
         // need to scale for browser resize
         Canvas.context.putImageData(Canvas.behindSafes[s], Canvas.ratios[s][0]*Canvas.width, Canvas.ratios[s][1]*Canvas.height)
@@ -432,7 +484,7 @@ export class Canvas {
 
         let fontSize = 65*Canvas.shrinkFactor
         Canvas.context.font = `${fontSize}px unlocked`
-        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor - 3*Canvas.shrinkFactor,  Canvas.ratios[s][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor + 3*Canvas.shrinkFactor)
+        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor - Canvas.blackFont*Canvas.shrinkFactor,  Canvas.ratios[s][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor + Canvas.blackFont*Canvas.shrinkFactor)
         Canvas.context.fillStyle = 'white'
         // hard
         Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0]*Canvas.width + Canvas.fontXTranslate*Canvas.shrinkFactor,  Canvas.ratios[s][1]*Canvas.height + Canvas.fontYTranslate*Canvas.shrinkFactor)
@@ -600,6 +652,7 @@ export class Canvas {
             Canvas.behindSafes["safe8"] = Canvas.context.getImageData(Canvas.ratios["safe8"][0]*Canvas.width,  Canvas.ratios["safe8"][1]*Canvas.height, widthFactor, heightFactor)
             Canvas.behindSafes["safe9"] = Canvas.context.getImageData(Canvas.ratios["safe9"][0]*Canvas.width,  Canvas.ratios["safe9"][1]*Canvas.height, widthFactor, heightFactor)   
         }
+
 
         for (let i = 1; i <=9; i++){
             let s = "safe" + i.toString()

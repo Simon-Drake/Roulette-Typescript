@@ -18,6 +18,7 @@ export class Game {
         this.multipliers = [];
         this.unlockedSafes = [];
         this.unlockedMultipliers = new Set();
+        this.winImageSX = 0;
         this.states = {
             "ZERO_SPINS": 0,
             "SPINNING": 1,

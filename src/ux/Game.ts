@@ -11,6 +11,7 @@ export class Game{
     unlockedMultipliers: any = new Set()
     winSafes: [number, number];
     winImage: HTMLImageElement;
+    winImageSX: number = 0;
     state: number
     states: object = {
         "ZERO_SPINS" : 0,
