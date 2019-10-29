@@ -11,10 +11,6 @@ import { Spark } from './Spark.js';
 import { Star } from './Star.js';
 import { Dimensions } from './Dimensions.js';
 import { Arithmetic } from './Arithmetic.js';
-// done in 2 classes
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
 export class Canvas {
     static init(el, game) {
         Canvas.loadFonts();
@@ -82,7 +78,7 @@ export class Canvas {
             antiClockwise
                 ? state = 0
                 : state = 1;
-            Canvas.spinWheel(Canvas.currentRotation, antiClockwise, -Arithmetic.degToRadians(360 / 9 * getRandomInt(9)), Arithmetic.degToRadians(360 / 9 * getRandomInt(9)), state);
+            Canvas.spinWheel(Canvas.currentRotation, antiClockwise, -Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), state);
             Canvas.writeWords(110);
         }
     }

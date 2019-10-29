@@ -26,10 +26,7 @@ export class Dimensions{
         public thirdLightsWidth: number;
         public thirdDialWidth: number;
         public blackFont: number = 4
-        public winImageSX: number = 0;
-
-    
-        // May be able to do this better
+        public winImageSX: number = 0;    
         public xLights1: number = 0;
         public xLights2: number = 1;
     

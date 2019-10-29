@@ -7,10 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-// done in 2 classes
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
+import { Arithmetic } from './Arithmetic.js';
 export class Game {
     constructor() {
         this.bet = 10;
@@ -27,7 +24,7 @@ export class Game {
             "WON": 3,
             "LOST": 4
         };
-        this.multipliers.push(getRandomInt(5) + 15);
+        this.multipliers.push(Arithmetic.getRandomInt(5) + 15);
         this.completeMultipliers();
     }
     // use then not all as they are changing and testing the same list
@@ -39,7 +36,7 @@ export class Game {
     }
     pushOne() {
         return __awaiter(this, void 0, void 0, function* () {
-            let int = getRandomInt(5) + 15;
+            let int = Arithmetic.getRandomInt(5) + 15;
             this.multipliers.indexOf(int) === -1
                 ? this.multipliers.push(int)
                 : this.pushOne();
@@ -57,7 +54,7 @@ export class Game {
     setBoxes() {
         let multipliers = this.multipliers.concat(this.multipliers).concat(this.multipliers);
         for (let i = 1; i <= 8; i++) {
-            this.boxes[i] = multipliers[getRandomInt(multipliers.length)];
+            this.boxes[i] = multipliers[Arithmetic.getRandomInt(multipliers.length)];
             multipliers.splice(multipliers.indexOf(this.boxes[i]), 1);
         }
         this.boxes[9] = multipliers[0];

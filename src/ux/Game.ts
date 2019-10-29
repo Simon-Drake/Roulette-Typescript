@@ -1,7 +1,4 @@
-// done in 2 classes
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
+import {Arithmetic} from './Arithmetic.js'
 
 export class Game{
     bet: number = 10
@@ -24,7 +21,7 @@ export class Game{
         "LOST" : 4
     }
     constructor(){
-        this.multipliers.push(getRandomInt(5)+15)
+        this.multipliers.push(Arithmetic.getRandomInt(5)+15)
         this.completeMultipliers()
     }
 
@@ -35,7 +32,7 @@ export class Game{
     }
 
     public async pushOne(){
-        let int = getRandomInt(5)+15
+        let int = Arithmetic.getRandomInt(5)+15
         this.multipliers.indexOf(int) === -1
             ? this.multipliers.push(int)
             : this.pushOne()
@@ -54,7 +51,7 @@ export class Game{
     public setBoxes(){
         let multipliers = this.multipliers.concat(this.multipliers).concat(this.multipliers)
         for (let i = 1; i <= 8; i++){
-            this.boxes[i] = multipliers[getRandomInt(multipliers.length)]
+            this.boxes[i] = multipliers[Arithmetic.getRandomInt(multipliers.length)]
             multipliers.splice(multipliers.indexOf(this.boxes[i]), 1)
         }
         this.boxes[9] = multipliers[0]
