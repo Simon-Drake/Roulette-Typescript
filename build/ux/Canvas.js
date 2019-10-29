@@ -116,10 +116,14 @@ export class Canvas {
             }
             case 2: {
                 rotation += 0.05;
-                Canvas.rotate(rotation, 0);
-                rotation >= (antiClockwise2 + clockwise - 0.01)
-                    ? Canvas.evaluateScore(rotation)
-                    : setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 20);
+                if (rotation >= antiClockwise2) {
+                    Canvas.rotate(antiClockwise2, 0);
+                    Canvas.evaluateScore(antiClockwise2);
+                }
+                else {
+                    Canvas.rotate(rotation, 0);
+                    setTimeout(function () { Canvas.spinWheel(rotation, antiClockwise, clockwise, antiClockwise2, state); }, 20);
+                }
                 break;
             }
         }
@@ -129,6 +133,7 @@ export class Canvas {
         // Some DRY stuff to handle here 
         Canvas.currentRotation = rotation;
         let result = Canvas.getResult(rotation);
+        Canvas.game.result = result;
         if (Canvas.game.unlockedSafes.indexOf(result) === -1) {
             Canvas.game.unlockedSafes.push(result);
             Canvas.openSafe(result);
@@ -149,21 +154,24 @@ export class Canvas {
     }
     static assessWin(m) {
         if (Canvas.game.unlockedMultipliers.has(m)) {
-            Canvas.game.state = Canvas.game.states["WON"];
-            Canvas.won = true;
-            Canvas.handleWin();
-            Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length - 1], Canvas.returnBox(m, Canvas.game.unlockedSafes)];
-            Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]]);
-            Canvas.starParticles();
-            setInterval(function () { Canvas.drawStars(true); }, 100);
-            setInterval(function () { Canvas.changeSX(); }, 400);
-            setTimeout(function () { setInterval(function () { Canvas.changeScale(); }, 30); }, 3000);
-            setInterval(function () { Canvas.starParticles(); }, 2500);
+            setTimeout(function () { Canvas.implementWin(m); }, 2000);
         }
         else {
             Canvas.game.unlockedMultipliers.add(m);
             Canvas.redDial(0);
         }
+    }
+    static implementWin(m) {
+        Canvas.game.state = Canvas.game.states["WON"];
+        Canvas.won = true;
+        Canvas.handleWin();
+        Canvas.game.winSafes = [Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length - 1], Canvas.returnBox(m, Canvas.game.unlockedSafes)];
+        Canvas.game.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]]);
+        Canvas.starParticles();
+        setInterval(function () { Canvas.drawStars(true); }, 100);
+        setInterval(function () { Canvas.changeSX(); }, 500);
+        setTimeout(function () { setInterval(function () { Canvas.changeScale(); }, 30); }, 3000);
+        setInterval(function () { Canvas.starParticles(); }, 2500);
     }
     static changeSX() {
         Canvas.game.winImageSX == 0
@@ -171,7 +179,6 @@ export class Canvas {
             : Canvas.game.winImageSX = 0;
     }
     static changeScale() {
-        console.log(Canvas.scale);
         Canvas.scale += 0.05 * Canvas.scaleDirection;
         if (Canvas.scale > 1.4)
             Canvas.scaleDirection = -1;
@@ -199,7 +206,9 @@ export class Canvas {
     static fillCanvasColour() {
         Canvas.context.fillStyle = 'silver';
         Canvas.context.fillRect(0, 0, Canvas.width, Canvas.height);
+        Canvas.context.fillStyle = 'black';
     }
+    // might not need move if array is empty... 
     static drawStars(move) {
         // done twice
         let s1 = "safe" + Canvas.game.winSafes[0].toString();
@@ -212,7 +221,7 @@ export class Canvas {
         Canvas.writeWords(75);
         for (let i = 0; i < Canvas.stars.length; i++) {
             if (Canvas.stars[i]) {
-                if (Canvas.stars[i].distanceFromSource > 195) {
+                if (Canvas.stars[i].distanceFromSource >= 200) {
                     delete Canvas.stars[i];
                 }
                 else {
@@ -231,32 +240,35 @@ export class Canvas {
         let s2x = Canvas.ratios[s2][0] * Canvas.width + Canvas.priseXTranslate * Canvas.shrinkFactor;
         let s2y = Canvas.ratios[s2][1] * Canvas.height + Canvas.priseYTranslate * Canvas.shrinkFactor;
         let scale = Canvas.scale;
+        // Canvas.context.putImageData(Canvas.behindSafes[s1], Canvas.ratios[s1][0]*Canvas.width, Canvas.ratios[s1][1]*Canvas.height)
+        // Canvas.context.putImageData(Canvas.behindSafes[s2], Canvas.ratios[s2][0]*Canvas.width, Canvas.ratios[s2][1]*Canvas.height)
         Canvas.context.drawImage(image, Canvas.game.winImageSX, 0, image.width / 2, image.height, s1x - image.width * (scale - 1) / 4, s1y - image.height * (scale - 1) / 2, scale * image.width * Canvas.shrinkFactor / 2, scale * image.height * Canvas.shrinkFactor);
         Canvas.context.drawImage(image, Canvas.game.winImageSX, 0, image.width / 2, image.height, s2x - image.width * (scale - 1) / 4, s2y - image.height * (scale - 1) / 2, scale * image.width * Canvas.shrinkFactor / 2, scale * image.height * Canvas.shrinkFactor);
         if (Canvas.game.winImageSX > 0) {
-            // done Twice put in method
-            let fontSize = 65 * Canvas.shrinkFactor * scale;
-            Canvas.context.font = `${fontSize}px unlocked`;
-            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[0]]}`, Canvas.ratios[s1][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor - Canvas.blackFont * Canvas.shrinkFactor, Canvas.ratios[s1][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor + Canvas.blackFont * Canvas.shrinkFactor);
-            Canvas.context.fillStyle = 'white';
-            // hard
-            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[0]]}`, Canvas.ratios[s1][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor, Canvas.ratios[s1][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor);
-            Canvas.context.fillStyle = 'black';
-            // done Twice put in method
-            Canvas.context.font = `${fontSize}px unlocked`;
-            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[1]]}`, Canvas.ratios[s2][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor - Canvas.blackFont * Canvas.shrinkFactor, Canvas.ratios[s2][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor + Canvas.blackFont * Canvas.shrinkFactor);
-            Canvas.context.fillStyle = 'white';
-            // hard
-            Canvas.context.fillText(`x${Canvas.game.boxes[Canvas.game.winSafes[1]]}`, Canvas.ratios[s2][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor, Canvas.ratios[s2][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor);
-            Canvas.context.fillStyle = 'black';
+            Canvas.drawMultiplier(Canvas.game.boxes[Canvas.game.winSafes[0]], s1);
+            Canvas.drawMultiplier(Canvas.game.boxes[Canvas.game.winSafes[1]], s2);
         }
+    }
+    static drawMultiplier(multiple, safe) {
+        // hard
+        // all scaled
+        let fontSize = 65 * Canvas.shrinkFactor * Canvas.scale;
+        Canvas.context.font = `${fontSize}px unlocked`;
+        let blackfx = Canvas.ratios[safe][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor - Canvas.blackFont * Canvas.shrinkFactor;
+        let blackfy = Canvas.ratios[safe][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor + Canvas.blackFont * Canvas.shrinkFactor;
+        let whitefx = Canvas.ratios[safe][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor;
+        let whitefy = Canvas.ratios[safe][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor;
+        Canvas.context.fillText(`x${multiple}`, blackfx - 65 * (fontSize / 65 - 1) / 2, blackfy + 65 * (fontSize / 65 - 1) / 2);
+        Canvas.context.fillStyle = 'white';
+        Canvas.context.fillText(`x${multiple}`, whitefx - 65 * (fontSize / 65 - 1) / 2, whitefy + 65 * (fontSize / 65 - 1) / 2);
+        Canvas.context.fillStyle = 'black';
     }
     static rotateStar(star) {
         let centerX = star.x + star.size * Canvas.shrinkFactor / 2;
         let centerY = star.y + star.size * Canvas.shrinkFactor / 2;
         Canvas.context.translate(centerX, centerY);
         Canvas.context.rotate(star.rotation);
-        let gA = Math.sqrt(-star.distanceFromSource + 200) / 9;
+        let gA = Math.sqrt(-star.distanceFromSource + 200) / 9 || 0.1;
         gA > 1
             ? Canvas.context.globalAlpha = 1
             : Canvas.context.globalAlpha = gA;
@@ -295,21 +307,15 @@ export class Canvas {
     }
     static openSafe(result) {
         let s = "safe" + result.toString();
-        // better?
-        // Canvas.writeWords(110)
         // need to scale for browser resize
         Canvas.context.putImageData(Canvas.behindSafes[s], Canvas.ratios[s][0] * Canvas.width, Canvas.ratios[s][1] * Canvas.height);
         Canvas.context.drawImage(Canvas.safeOpen, Canvas.ratios[s][0] * Canvas.width + Canvas.openSafeXTranslate * Canvas.shrinkFactor, Canvas.ratios[s][1] * Canvas.height + Canvas.openSafeYTranslate * Canvas.shrinkFactor, Canvas.safeOpen.width * Canvas.shrinkFactor, Canvas.safeOpen.height * Canvas.shrinkFactor);
         let image = Canvas.mapMultiplierToImage(Canvas.game.boxes[result]);
         // /2 once
         Canvas.context.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.ratios[s][0] * Canvas.width + Canvas.priseXTranslate * Canvas.shrinkFactor, Canvas.ratios[s][1] * Canvas.height + Canvas.priseYTranslate * Canvas.shrinkFactor, image.width * Canvas.shrinkFactor / 2, image.height * Canvas.shrinkFactor);
-        let fontSize = 65 * Canvas.shrinkFactor;
-        Canvas.context.font = `${fontSize}px unlocked`;
-        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor - Canvas.blackFont * Canvas.shrinkFactor, Canvas.ratios[s][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor + Canvas.blackFont * Canvas.shrinkFactor);
-        Canvas.context.fillStyle = 'white';
-        // hard
-        Canvas.context.fillText(`x${Canvas.game.boxes[result]}`, Canvas.ratios[s][0] * Canvas.width + Canvas.fontXTranslate * Canvas.shrinkFactor, Canvas.ratios[s][1] * Canvas.height + Canvas.fontYTranslate * Canvas.shrinkFactor);
-        Canvas.context.fillStyle = 'black';
+        if (Canvas.game.state !== Canvas.game.states["WON"]) {
+            Canvas.drawMultiplier(Canvas.game.boxes[result], s);
+        }
     }
     static mapMultiplierToImage(multiplier) {
         // need all square brackets?
@@ -374,7 +380,7 @@ export class Canvas {
                 Canvas.context.putImageData(this.behindInstructions, Canvas.ratios["instructions"][0] * Canvas.width, Canvas.ratios["instructions"][1] * Canvas.height);
                 Canvas.context.drawImage(this.screen, Canvas.ratios["screen"][0] * Canvas.width, Canvas.ratios["screen"][1] * Canvas.height, this.screen.width * Canvas.shrinkFactor, this.screen.height * Canvas.shrinkFactor);
                 // hard and shrink
-                Canvas.context.fillText("SAFE" + Canvas.game.unlockedSafes[Canvas.game.unlockedSafes.length - 1].toString(), Canvas.ratios["spinning"][0] * Canvas.width + 63, Canvas.ratios["spinning"][1] * Canvas.height);
+                Canvas.context.fillText("SAFE" + Canvas.game.result.toString(), Canvas.ratios["spinning"][0] * Canvas.width + 63, Canvas.ratios["spinning"][1] * Canvas.height);
                 // hard
                 Canvas.context.font = `${45}px unlocked`;
                 Canvas.context.fillText(Canvas.getUnlockedSafesString(), Canvas.ratios["unlockedSafes"][0] * Canvas.width, Canvas.ratios["unlockedSafes"][1] * Canvas.height);

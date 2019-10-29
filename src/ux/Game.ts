@@ -5,14 +5,19 @@ function getRandomInt(max) {
 
 export class Game{
     bet: number = 10
+
     boxes: object = {};
     spins: number = 0;
+    result: number;
     multipliers: number[] = [];
     unlockedSafes: number[] = [];
     unlockedMultipliers: any = new Set()
     winSafes: [number, number];
+
+    // should be in draw class
     winImage: HTMLImageElement;
     winImageSX: number = 0;
+
     state: number
     states: object = {
         "ZERO_SPINS" : 0,
@@ -47,14 +52,14 @@ export class Game{
         }
         this.boxes[9] = multipliers[0]
 
-        // this.boxes[1] = 15
-        // this.boxes[2] = 15
-        // this.boxes[3] = 15
-        // this.boxes[4] = 15
-        // this.boxes[5] = 15
-        // this.boxes[6] = 15
-        // this.boxes[7] = 15
-        // this.boxes[8] = 15
-        // this.boxes[9] = 15
+        this.boxes[1] = 15
+        this.boxes[2] = 15
+        this.boxes[3] = 15
+        this.boxes[4] = 15
+        this.boxes[5] = 15
+        this.boxes[6] = 15
+        this.boxes[7] = 15
+        this.boxes[8] = 15
+        this.boxes[9] = 15
     }
 }
