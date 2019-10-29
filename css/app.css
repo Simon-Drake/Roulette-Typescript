@@ -1,33 +1,7 @@
-:root {
-    --fg-1: #ddddff;
-    --fg-2: #4acfef;
-    --fg-3: #caa2d2;
-}
-
 html, body { height: 100%; margin: 0; }
 
 body {
     display: flex;
-    flex-flow: column nowrap;
-    justify-content: center;
     align-items: center;
-    color: var(--fg-1);
     background-color: silver;
-    font-family: 'Courier New', Courier, monospace;
 }
-
-canvas {
-    display: block;
-    border: 1px solid var(--fg-1)
-}
-
-
-/* @font-face {
-    font-family: "instructions";
-    src: url('../src/fonts/Dimbo Italic.ttf');
-}
-
-@font-face {
-    font-family: "unlocked";
-    src: url('../src/fonts/TitanOne-Regular.ttf')
-} */

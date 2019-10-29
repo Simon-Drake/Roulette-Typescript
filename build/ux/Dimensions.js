@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 export class Dimensions {
     constructor(el) {
         this.maxWidth = 916;
@@ -13,6 +22,7 @@ export class Dimensions {
         this.starXTranslate = this.fontXTranslate - 15;
         this.starYTranslate = this.fontYTranslate - 70;
         this.blackFont = 4;
+        this.winImageSX = 0;
         // May be able to do this better
         this.xLights1 = 0;
         this.xLights2 = 1;
@@ -65,6 +75,11 @@ export class Dimensions {
         }
         this.shrinkFactor = this.width / this.maxWidth;
     }
+    changeSX(width) {
+        this.winImageSX == 0
+            ? this.winImageSX = width / 2
+            : this.winImageSX = 0;
+    }
     scaleToWidth() {
         this.canvasElement.width = document.body.clientWidth * 0.95;
         this.width = document.body.clientWidth * 0.95;
@@ -84,5 +99,29 @@ export class Dimensions {
         // plus 30 on the height for marker, hard coded?
         this.centerSupport = [this.ratios["supportDial"][0] * this.width + supportWidth / 2 * this.shrinkFactor, this.ratios["supportDial"][1] * this.height + 30 * this.shrinkFactor + (supportHeight - 30 * this.shrinkFactor) / 2 * this.shrinkFactor];
         this.centerDial = [this.ratios["dial"][0] * this.width + dialWidth / 6 * this.shrinkFactor, this.ratios["dial"][1] * this.height + dialHeight / 2 * this.shrinkFactor];
+    }
+    // decrease radius. some are on outer grip
+    getPoint() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const a = Math.random() * 2 * Math.PI;
+            // hardcode
+            const r = (this.radiusSupport - 5) * Math.sqrt(Math.random());
+            if (Math.sqrt(Math.pow((r * Math.cos(a)), 2) + Math.pow((r * Math.sin(a)), 2)) > this.radiusDial) {
+                return [r * Math.cos(a) + this.centerSupport[0], r * Math.sin(a) + this.centerSupport[1]];
+            }
+            else {
+                return this.getPoint();
+            }
+        });
+    }
+    // Can we do change lights with save and restore? What is more expensive?
+    changeLights() {
+        // Change the sx translation for both lights
+        this.xLights1 < 2
+            ? this.xLights1++
+            : this.xLights1 = 0;
+        this.xLights2 < 2
+            ? this.xLights2++
+            : this.xLights2 = 0;
     }
 }
