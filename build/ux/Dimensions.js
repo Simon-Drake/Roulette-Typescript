@@ -13,17 +13,16 @@ export class Dimensions {
         this.maxHeight = 623;
         this.widthToHeightRatio = this.maxWidth / this.maxHeight;
         this.heightToWidthRatio = this.maxHeight / this.maxWidth;
-        this.openSafeXTranslate = -35;
-        this.openSafeYTranslate = -25;
-        this.priseXTranslate = this.openSafeXTranslate + 10;
-        this.priseYTranslate = this.openSafeYTranslate + 6;
-        this.fontXTranslate = this.priseXTranslate + 65;
-        this.fontYTranslate = this.priseYTranslate + 110;
-        this.starXTranslate = this.fontXTranslate - 15;
-        this.starYTranslate = this.fontYTranslate - 70;
+        this.openSafeXTrans = -35;
+        this.openSafeYTrans = -25;
+        this.priseXTrans = this.openSafeXTrans + 10;
+        this.priseYTrans = this.openSafeYTrans + 6;
+        this.fontXTrans = this.priseXTrans + 65;
+        this.fontYTrans = this.priseYTrans + 110;
+        this.starXTrans = this.fontXTrans - 15;
+        this.starYTrans = this.fontYTrans - 70;
         this.blackFont = 4;
         this.winImageSX = 0;
-        // May be able to do this better
         this.xLights1 = 0;
         this.xLights2 = 1;
         // How far left and how far down as a ratio of the size of the Canvas
@@ -50,16 +49,18 @@ export class Dimensions {
             "instructions": [(65 / this.maxWidth), (30 / this.maxHeight)],
             "instructionsTop": [(68 / this.maxWidth), (65 / this.maxHeight)],
             "instructionsBottom": [(68 / this.maxWidth), (110 / this.maxHeight)],
+            "panelBackground": [(31 / this.maxWidth), (12 / this.maxHeight)],
+            "screenBackground": [(600 / this.maxWidth), (186 / this.maxHeight)],
             "unlockedSafes": [(642 / this.maxWidth), (243 / this.maxHeight)]
         };
-        this.canvasElement = el;
+        this.canvasEl = el;
     }
     sizeCanvas() {
         // If the browser is large enough scale the canvas to its maximum dimensions.
         if (document.body.clientWidth > this.maxWidth && window.innerHeight > this.maxHeight) {
-            this.canvasElement.width = this.maxWidth;
+            this.canvasEl.width = this.maxWidth;
             this.width = this.maxWidth;
-            this.canvasElement.height = this.maxHeight;
+            this.canvasEl.height = this.maxHeight;
             this.height = this.maxHeight;
         }
         else {
@@ -73,7 +74,7 @@ export class Dimensions {
                     ? this.scaleToWidth()
                     : this.scaleToHeight();
         }
-        this.shrinkFactor = this.width / this.maxWidth;
+        this.shrink = this.width / this.maxWidth;
     }
     changeSX(width) {
         this.winImageSX == 0
@@ -81,24 +82,24 @@ export class Dimensions {
             : this.winImageSX = 0;
     }
     scaleToWidth() {
-        this.canvasElement.width = document.body.clientWidth * 0.95;
+        this.canvasEl.width = document.body.clientWidth * 0.95;
         this.width = document.body.clientWidth * 0.95;
-        this.canvasElement.height = this.width * this.heightToWidthRatio;
+        this.canvasEl.height = this.width * this.heightToWidthRatio;
         this.height = this.width * this.heightToWidthRatio;
     }
     scaleToHeight() {
-        this.canvasElement.height = document.body.clientHeight * 0.95;
+        this.canvasEl.height = document.body.clientHeight * 0.95;
         this.height = document.body.clientHeight * 0.95;
-        this.canvasElement.width = this.height * this.widthToHeightRatio;
+        this.canvasEl.width = this.height * this.widthToHeightRatio;
         this.width = this.height * this.widthToHeightRatio;
     }
     setDimensions(supportWidth, supportHeight, dialWidth, dialHeight, spinWidth) {
-        this.radiusSupport = (supportWidth - 15) / 2 * this.shrinkFactor;
-        this.radiusSpin = spinWidth / 2 * this.shrinkFactor;
+        this.radiusSupport = (supportWidth - 15) / 2 * this.shrink;
+        this.radiusSpin = spinWidth / 2 * this.shrink;
         this.radiusDial = this.radiusSupport * 0.9;
         // plus 30 on the height for marker, hard coded?
-        this.centerSupport = [this.ratios["supportDial"][0] * this.width + supportWidth / 2 * this.shrinkFactor, this.ratios["supportDial"][1] * this.height + 30 * this.shrinkFactor + (supportHeight - 30 * this.shrinkFactor) / 2 * this.shrinkFactor];
-        this.centerDial = [this.ratios["dial"][0] * this.width + dialWidth / 6 * this.shrinkFactor, this.ratios["dial"][1] * this.height + dialHeight / 2 * this.shrinkFactor];
+        this.centerSupport = [this.ratios["supportDial"][0] * this.width + supportWidth / 2 * this.shrink, this.ratios["supportDial"][1] * this.height + 30 * this.shrink + (supportHeight - 30 * this.shrink) / 2 * this.shrink];
+        this.centerDial = [this.ratios["dial"][0] * this.width + dialWidth / 6 * this.shrink, this.ratios["dial"][1] * this.height + dialHeight / 2 * this.shrink];
     }
     // decrease radius. some are on outer grip
     getPoint() {

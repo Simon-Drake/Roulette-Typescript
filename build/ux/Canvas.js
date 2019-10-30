@@ -21,25 +21,29 @@ export class Canvas {
         Canvas.dim = new Dimensions(el);
         window.addEventListener('resize', function () {
             Canvas.resizing = true;
-            clearInterval(Canvas.glowInterval);
-            clearInterval(Canvas.flashInterval);
+            clearInterval(Canvas.glowInterv);
+            clearInterval(Canvas.flashInterv);
             Canvas.sparks = [];
             Canvas.dim.sizeCanvas();
             Canvas.drawImages();
-            Canvas.glowInterval = setInterval(Canvas.generateSparks, 450);
-            Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+            Canvas.glowInterv = setInterval(Canvas.generateSparks, 450);
+            Canvas.flashInterv = setInterval(Canvas.flashSpin, 500);
             setTimeout(function () { Canvas.resizing = false; }, 50);
         });
+        // TEST CLICKS IT GOES CRAZY WHEN CLICK CRAZY
         el.addEventListener('click', function (e) {
             if (Canvas.game.state == Canvas.game.states["ZERO_SPINS"] || Canvas.game.state == Canvas.game.states["SPUN"])
-                Canvas.intersect(e.offsetX, e.offsetY);
+                console.log("going through to click");
+            Canvas.intersect(e.offsetX, e.offsetY);
+            if (Canvas.game.state == Canvas.game.states["LOST"])
+                Canvas.intersectReplay(e.offsetX, e.offsetY);
         });
-        setInterval(function () {
+        Canvas.lightsInterv = setInterval(function () {
             Canvas.dim.changeLights();
             Canvas.drawLights();
         }, 1000);
-        Canvas.glowInterval = setInterval(Canvas.generateSparks, 450);
-        Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+        Canvas.glowInterv = setInterval(Canvas.generateSparks, 450);
+        Canvas.flashInterv = setInterval(Canvas.flashSpin, 500);
     }
     static loadImages() {
         this.lights.src = '../../images/leds_safe_dial_minigame.png';
@@ -59,9 +63,12 @@ export class Canvas {
         this.diamond.src = '../../images/diamond.png';
         this.winScreen.src = '../../images/screen_safe_win.png';
         this.star.src = '../../images/star.png';
+        this.panelBackg.src = '../../images/display_panel_background.png';
+        this.screenBackg.src = '../../images/screen_safe_background.png';
         this.background.onload = this.dial.onload = this.lights.onload = this.safe.onload = this.supportDial.onload = this.coin.onload =
             this.ring.onload = this.notes.onload = this.spin.onload = this.safeOpen.onload = this.screen.onload = this.sparkSafe.onload =
-                this.gold.onload = this.diamond.onload = this.winScreen.onload = this.marker.onload = this.star.onload = Canvas.counter;
+                this.gold.onload = this.diamond.onload = this.winScreen.onload = this.marker.onload = this.star.onload = this.panelBackg.onload =
+                    this.screenBackg.onload = Canvas.counter;
     }
     static intersect(x, y) {
         let inside = Math.sqrt(Math.pow((Canvas.dim.centerSupport[0] - x), 2) + Math.pow((Canvas.dim.centerSupport[1] - y), 2)) < Canvas.dim.radiusSpin;
@@ -70,15 +77,15 @@ export class Canvas {
             Canvas.spinOn = false;
             Canvas.game.spins += 1;
             Canvas.sparks = [];
-            clearInterval(Canvas.glowInterval);
-            clearInterval(Canvas.flashInterval);
+            clearInterval(Canvas.glowInterv);
+            clearInterval(Canvas.flashInterv);
             Canvas.drawBackgroundAndSupport();
             let state;
             let antiClockwise = Math.round(Math.random()) * Math.random() * Math.PI;
             antiClockwise
                 ? state = 0
                 : state = 1;
-            Canvas.spinWheel(Canvas.currentRotation, antiClockwise, -Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), state);
+            Canvas.spinWheel(Canvas.currentRot, antiClockwise, -Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), state);
             Canvas.writeWords(110);
         }
     }
@@ -116,7 +123,7 @@ export class Canvas {
     }
     static evaluateScore(rotation) {
         Canvas.game.state = Canvas.game.states["SPUN"];
-        Canvas.currentRotation = rotation;
+        Canvas.currentRot = rotation;
         Canvas.game.result = Arithmetic.getResult(rotation);
         if (Canvas.game.unlockedSafes.indexOf(Canvas.game.result) === -1) {
             Canvas.game.unlockedSafes.push(Canvas.game.result);
@@ -126,16 +133,16 @@ export class Canvas {
                 : Canvas.redDial(0);
         }
         else {
-            Canvas.glowInterval = setInterval(Canvas.generateSparks, 450);
-            Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+            Canvas.glowInterv = setInterval(Canvas.generateSparks, 450);
+            Canvas.flashInterv = setInterval(Canvas.flashSpin, 500);
         }
         Canvas.writeWords(110);
     }
     static implementWin() {
         Canvas.game.state = Canvas.game.states["WON"];
         Canvas.sparks = [];
-        clearInterval(Canvas.glowInterval);
-        clearInterval(Canvas.flashInterval);
+        clearInterval(Canvas.glowInterv);
+        clearInterval(Canvas.flashInterv);
         setInterval(function () { Canvas.winSpin(0.18, true); }, 35);
         Canvas.game.setWinSafes();
         Canvas.winImage = Canvas.mapMultiplierToImage(Canvas.game.boxes[Canvas.game.winSafes[0]]);
@@ -146,18 +153,18 @@ export class Canvas {
         setInterval(function () { Canvas.starParticles(); }, 2500);
     }
     static changeScale() {
-        Canvas.scale += 0.05 * Canvas.scaleDirection;
+        Canvas.scale += 0.05 * Canvas.scaleDir;
         if (Canvas.scale > 1.4)
-            Canvas.scaleDirection = -1;
+            Canvas.scaleDir = -1;
         if (Canvas.scale <= 1)
-            Canvas.scaleDirection = +1;
+            Canvas.scaleDir = +1;
     }
     static starParticles() {
         Canvas.game.winSafesStrings[0] = "safe" + Canvas.game.winSafes[0].toString();
         Canvas.game.winSafesStrings[1] = "safe" + Canvas.game.winSafes[1].toString();
-        for (let i = 0; i < 5; i++) {
-            Canvas.stars.push(new Star(Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][0] * Canvas.dim.width + Canvas.dim.starXTranslate * Canvas.dim.shrinkFactor, Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][1] * Canvas.dim.height + Canvas.dim.starYTranslate * Canvas.dim.shrinkFactor, 20 + 80 * Math.random()));
-            Canvas.stars.push(new Star(Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][0] * Canvas.dim.width + Canvas.dim.starXTranslate * Canvas.dim.shrinkFactor, Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][1] * Canvas.dim.height + Canvas.dim.starYTranslate * Canvas.dim.shrinkFactor, 20 + 80 * Math.random()));
+        for (let i = 0; i < 8; i++) {
+            Canvas.stars.push(new Star(Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][0] * Canvas.dim.width + Canvas.dim.starXTrans * Canvas.dim.shrink, Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][1] * Canvas.dim.height + Canvas.dim.starYTrans * Canvas.dim.shrink, 20 + 80 * Math.random()));
+            Canvas.stars.push(new Star(Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][0] * Canvas.dim.width + Canvas.dim.starXTrans * Canvas.dim.shrink, Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][1] * Canvas.dim.height + Canvas.dim.starYTrans * Canvas.dim.shrink, 20 + 80 * Math.random()));
         }
     }
     static fillCanvasColour() {
@@ -189,13 +196,13 @@ export class Canvas {
             }
         }
         let image = Canvas.winImage;
-        let s1x = Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][0] * Canvas.dim.width + Canvas.dim.priseXTranslate * Canvas.dim.shrinkFactor;
-        let s1y = Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][1] * Canvas.dim.height + Canvas.dim.priseYTranslate * Canvas.dim.shrinkFactor;
-        let s2x = Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][0] * Canvas.dim.width + Canvas.dim.priseXTranslate * Canvas.dim.shrinkFactor;
-        let s2y = Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][1] * Canvas.dim.height + Canvas.dim.priseYTranslate * Canvas.dim.shrinkFactor;
+        let s1x = Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][0] * Canvas.dim.width + Canvas.dim.priseXTrans * Canvas.dim.shrink;
+        let s1y = Canvas.dim.ratios[Canvas.game.winSafesStrings[0]][1] * Canvas.dim.height + Canvas.dim.priseYTrans * Canvas.dim.shrink;
+        let s2x = Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][0] * Canvas.dim.width + Canvas.dim.priseXTrans * Canvas.dim.shrink;
+        let s2y = Canvas.dim.ratios[Canvas.game.winSafesStrings[1]][1] * Canvas.dim.height + Canvas.dim.priseYTrans * Canvas.dim.shrink;
         let scale = Canvas.scale;
-        Canvas.ctx.drawImage(image, Canvas.dim.winImageSX, 0, image.width / 2, image.height, s1x - image.width * (scale - 1) / 4, s1y - image.height * (scale - 1) / 2, scale * image.width * Canvas.dim.shrinkFactor / 2, scale * image.height * Canvas.dim.shrinkFactor);
-        Canvas.ctx.drawImage(image, Canvas.dim.winImageSX, 0, image.width / 2, image.height, s2x - image.width * (scale - 1) / 4, s2y - image.height * (scale - 1) / 2, scale * image.width * Canvas.dim.shrinkFactor / 2, scale * image.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(image, Canvas.dim.winImageSX, 0, image.width / 2, image.height, s1x - image.width * (scale - 1) / 4, s1y - image.height * (scale - 1) / 2, scale * image.width * Canvas.dim.shrink / 2, scale * image.height * Canvas.dim.shrink);
+        Canvas.ctx.drawImage(image, Canvas.dim.winImageSX, 0, image.width / 2, image.height, s2x - image.width * (scale - 1) / 4, s2y - image.height * (scale - 1) / 2, scale * image.width * Canvas.dim.shrink / 2, scale * image.height * Canvas.dim.shrink);
         if (Canvas.dim.winImageSX > 0) {
             Canvas.drawMultiplier(Canvas.game.boxes[Canvas.game.winSafes[0]], Canvas.game.winSafesStrings[0]);
             Canvas.drawMultiplier(Canvas.game.boxes[Canvas.game.winSafes[1]], Canvas.game.winSafesStrings[1]);
@@ -204,54 +211,80 @@ export class Canvas {
     static drawMultiplier(multiple, safe) {
         // hard
         // all scaled
-        let fontSize = 65 * Canvas.dim.shrinkFactor * Canvas.scale;
+        let fontSize = 65 * Canvas.dim.shrink * Canvas.scale;
         Canvas.ctx.font = `${fontSize}px unlocked`;
-        let blackfx = Canvas.dim.ratios[safe][0] * Canvas.dim.width + Canvas.dim.fontXTranslate * Canvas.dim.shrinkFactor - Canvas.dim.blackFont * Canvas.dim.shrinkFactor;
-        let blackfy = Canvas.dim.ratios[safe][1] * Canvas.dim.height + Canvas.dim.fontYTranslate * Canvas.dim.shrinkFactor + Canvas.dim.blackFont * Canvas.dim.shrinkFactor;
-        let whitefx = Canvas.dim.ratios[safe][0] * Canvas.dim.width + Canvas.dim.fontXTranslate * Canvas.dim.shrinkFactor;
-        let whitefy = Canvas.dim.ratios[safe][1] * Canvas.dim.height + Canvas.dim.fontYTranslate * Canvas.dim.shrinkFactor;
+        let blackfx = Canvas.dim.ratios[safe][0] * Canvas.dim.width + Canvas.dim.fontXTrans * Canvas.dim.shrink - Canvas.dim.blackFont * Canvas.dim.shrink;
+        let blackfy = Canvas.dim.ratios[safe][1] * Canvas.dim.height + Canvas.dim.fontYTrans * Canvas.dim.shrink + Canvas.dim.blackFont * Canvas.dim.shrink;
+        let whitefx = Canvas.dim.ratios[safe][0] * Canvas.dim.width + Canvas.dim.fontXTrans * Canvas.dim.shrink;
+        let whitefy = Canvas.dim.ratios[safe][1] * Canvas.dim.height + Canvas.dim.fontYTrans * Canvas.dim.shrink;
         Canvas.ctx.fillText(`x${multiple}`, blackfx - 65 * (fontSize / 65 - 1) / 2, blackfy + 65 * (fontSize / 65 - 1) / 2);
         Canvas.ctx.fillStyle = 'white';
         Canvas.ctx.fillText(`x${multiple}`, whitefx - 65 * (fontSize / 65 - 1) / 2, whitefy + 65 * (fontSize / 65 - 1) / 2);
         Canvas.ctx.fillStyle = 'black';
     }
     static rotateStar(star) {
-        let centerX = star.x + star.size * Canvas.dim.shrinkFactor / 2;
-        let centerY = star.y + star.size * Canvas.dim.shrinkFactor / 2;
+        let centerX = star.x + star.size * Canvas.dim.shrink / 2;
+        let centerY = star.y + star.size * Canvas.dim.shrink / 2;
         Canvas.ctx.translate(centerX, centerY);
         Canvas.ctx.rotate(star.rotation);
         let gA = Math.sqrt(-star.distanceFromSource + 200) / 9 || 0.1;
         gA > 1
             ? Canvas.ctx.globalAlpha = 1
             : Canvas.ctx.globalAlpha = gA;
-        Canvas.ctx.drawImage(Canvas.star, star.x - centerX, star.y - centerY, star.size * Canvas.dim.shrinkFactor, star.size * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(Canvas.star, star.x - centerX, star.y - centerY, star.size * Canvas.dim.shrink, star.size * Canvas.dim.shrink);
         Canvas.ctx.setTransform(1, 0, 0, 1, 0, 0);
         Canvas.ctx.globalAlpha = 1;
     }
     static winSpin(increment, drawStars) {
         Canvas.drawBackgroundAndSupport();
         Canvas.ctx.putImageData(Canvas.behindMarker, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height);
-        Canvas.ctx.drawImage(Canvas.marker, Canvas.marker.width / 2, 0, Canvas.marker.width / 2, Canvas.marker.height, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height, Canvas.marker.width * Canvas.dim.shrinkFactor / 2, Canvas.marker.height * Canvas.dim.shrinkFactor);
-        Canvas.currentRotation = Canvas.currentRotation + increment;
-        Canvas.rotate(Canvas.currentRotation, Canvas.dim.thirdDialWidth * 2);
+        Canvas.ctx.drawImage(Canvas.marker, Canvas.marker.width / 2, 0, Canvas.marker.width / 2, Canvas.marker.height, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height, Canvas.marker.width * Canvas.dim.shrink / 2, Canvas.marker.height * Canvas.dim.shrink);
+        Canvas.currentRot = Canvas.currentRot + increment;
+        Canvas.rotate(Canvas.currentRot, Canvas.dim.thirdDialW * 2);
         if (drawStars)
             Canvas.drawStars(false);
     }
+    static implementLoss() {
+        // stop lights 
+        clearInterval(Canvas.lightsInterv);
+        // put background screen and header
+        Canvas.ctx.drawImage(Canvas.panelBackg, Canvas.dim.ratios["panelBackground"][0] * Canvas.dim.width, Canvas.dim.ratios["panelBackground"][1] * Canvas.dim.height, Canvas.panelBackg.width * Canvas.dim.shrink, Canvas.panelBackg.height * Canvas.dim.shrink);
+        Canvas.ctx.drawImage(Canvas.screenBackg, Canvas.dim.ratios["screenBackground"][0] * Canvas.dim.width, Canvas.dim.ratios["screenBackground"][1] * Canvas.dim.height, Canvas.screenBackg.width * Canvas.dim.shrink, Canvas.screenBackg.height * Canvas.dim.shrink);
+        setTimeout(function () { Canvas.showReplayButton(); }, 2000);
+    }
+    static showReplayButton() {
+        // replay button
+        Canvas.ctx.fillStyle = 'black';
+        Canvas.ctx.fillRect(Canvas.dim.width / 4, Canvas.dim.height / 3 + 3, Canvas.dim.width / 2, Canvas.dim.height / 3);
+        Canvas.ctx.fillStyle = `rgb(64, 64, 64)`;
+        Canvas.ctx.fillRect(Canvas.dim.width / 4 + 1, Canvas.dim.height / 3 - 1, Canvas.dim.width / 2, Canvas.dim.height / 3);
+        Canvas.writeWords(110);
+    }
+    static intersectReplay(x, y) {
+        console.log("passing here");
+        if (x > Canvas.dim.width / 4 && x < Canvas.dim.width / 4 * 3 && y > Canvas.dim.height / 3 && y < Canvas.dim.height / 3 * 2)
+            location.reload();
+    }
     static redDial(counter) {
         if (counter == 10) {
-            Canvas.glowInterval = setInterval(Canvas.generateSparks, 450);
-            Canvas.flashInterval = setInterval(Canvas.flashSpin, 500);
+            if (Canvas.game.spins >= 4) {
+                Canvas.game.state = Canvas.game.states["LOST"];
+            }
+            else {
+                Canvas.glowInterv = setInterval(Canvas.generateSparks, 450);
+                Canvas.flashInterv = setInterval(Canvas.flashSpin, 500);
+            }
         }
         else {
             Canvas.drawBackgroundAndSupport();
             if (counter % 2 == 0) {
-                Canvas.rotate(Canvas.currentRotation, Canvas.dim.thirdDialWidth);
+                Canvas.rotate(Canvas.currentRot, Canvas.dim.thirdDialW);
                 // hard
-                Canvas.ctx.drawImage(Canvas.marker, 0, 0, Canvas.marker.width / 2, Canvas.marker.height, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height, Canvas.marker.width * Canvas.dim.shrinkFactor / 2, Canvas.marker.height * Canvas.dim.shrinkFactor);
+                Canvas.ctx.drawImage(Canvas.marker, 0, 0, Canvas.marker.width / 2, Canvas.marker.height, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height, Canvas.marker.width * Canvas.dim.shrink / 2, Canvas.marker.height * Canvas.dim.shrink);
             }
             else {
                 Canvas.ctx.putImageData(Canvas.behindMarker, Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height);
-                Canvas.rotate(Canvas.currentRotation, 0);
+                Canvas.rotate(Canvas.currentRot, 0);
             }
             counter++;
             setTimeout(function () { Canvas.redDial(counter); }, 200);
@@ -261,10 +294,12 @@ export class Canvas {
         let s = "safe" + result.toString();
         // need to scale for browser resize
         Canvas.ctx.putImageData(Canvas.behindSafes[s], Canvas.dim.ratios[s][0] * Canvas.dim.width, Canvas.dim.ratios[s][1] * Canvas.dim.height);
-        Canvas.ctx.drawImage(Canvas.safeOpen, Canvas.dim.ratios[s][0] * Canvas.dim.width + Canvas.dim.openSafeXTranslate * Canvas.dim.shrinkFactor, Canvas.dim.ratios[s][1] * Canvas.dim.height + Canvas.dim.openSafeYTranslate * Canvas.dim.shrinkFactor, Canvas.safeOpen.width * Canvas.dim.shrinkFactor, Canvas.safeOpen.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(Canvas.safeOpen, Canvas.dim.ratios[s][0] * Canvas.dim.width + Canvas.dim.openSafeXTrans * Canvas.dim.shrink, Canvas.dim.ratios[s][1] * Canvas.dim.height + Canvas.dim.openSafeYTrans * Canvas.dim.shrink, Canvas.safeOpen.width * Canvas.dim.shrink, Canvas.safeOpen.height * Canvas.dim.shrink);
         let image = Canvas.mapMultiplierToImage(Canvas.game.boxes[result]);
         // /2 once
-        Canvas.ctx.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.dim.ratios[s][0] * Canvas.dim.width + Canvas.dim.priseXTranslate * Canvas.dim.shrinkFactor, Canvas.dim.ratios[s][1] * Canvas.dim.height + Canvas.dim.priseYTranslate * Canvas.dim.shrinkFactor, image.width * Canvas.dim.shrinkFactor / 2, image.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(image, 0, 0, image.width / 2, image.height, Canvas.dim.ratios[s][0] * Canvas.dim.width +
+            Canvas.dim.priseXTrans * Canvas.dim.shrink, Canvas.dim.ratios[s][1] * Canvas.dim.height +
+            Canvas.dim.priseYTrans * Canvas.dim.shrink, image.width * Canvas.dim.shrink / 2, image.height * Canvas.dim.shrink);
         if (Canvas.game.state !== Canvas.game.states["WON"]) {
             Canvas.drawMultiplier(Canvas.game.boxes[result], s);
         }
@@ -272,6 +307,18 @@ export class Canvas {
     static mapMultiplierToImage(multiplier) {
         // need all square brackets?
         switch (multiplier) {
+            case 11: {
+                return Canvas.coin;
+            }
+            case 12: {
+                return Canvas.coin;
+            }
+            case 13: {
+                return Canvas.coin;
+            }
+            case 14: {
+                return Canvas.coin;
+            }
             case 15: {
                 return Canvas.coin;
             }
@@ -292,10 +339,10 @@ export class Canvas {
     static rotate(rotation, xTranslate) {
         Canvas.ctx.translate(Canvas.dim.centerDial[0], Canvas.dim.centerDial[1]);
         Canvas.ctx.rotate(rotation);
-        Canvas.ctx.drawImage(this.dial, xTranslate, 0, Canvas.dim.thirdDialWidth, this.dial.height, Canvas.dim.ratios["dial"][0] * Canvas.dim.width - Canvas.dim.centerDial[0], Canvas.dim.ratios["dial"][1] * Canvas.dim.height - Canvas.dim.centerDial[1], Canvas.dim.thirdDialWidth * Canvas.dim.shrinkFactor, this.dial.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(this.dial, xTranslate, 0, Canvas.dim.thirdDialW, this.dial.height, Canvas.dim.ratios["dial"][0] * Canvas.dim.width - Canvas.dim.centerDial[0], Canvas.dim.ratios["dial"][1] * Canvas.dim.height - Canvas.dim.centerDial[1], Canvas.dim.thirdDialW * Canvas.dim.shrink, this.dial.height * Canvas.dim.shrink);
         Canvas.ctx.setTransform(1, 0, 0, 1, 0, 0);
         if (Canvas.spinOn) {
-            Canvas.ctx.drawImage(this.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, this.spin.width * Canvas.dim.shrinkFactor, this.spin.height * Canvas.dim.shrinkFactor);
+            Canvas.ctx.drawImage(this.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, this.spin.width * Canvas.dim.shrink, this.spin.height * Canvas.dim.shrink);
         }
     }
     static loadFonts() {
@@ -312,11 +359,11 @@ export class Canvas {
     }
     // 45 or 110 or 75
     static writeWords(fSize) {
-        let fontSize = fSize * Canvas.dim.shrinkFactor;
+        let fontSize = fSize * Canvas.dim.shrink;
         Canvas.ctx.font = `${fontSize}px instructions`;
         switch (Canvas.game.state) {
             case Canvas.game.states["ZERO_SPINS"]: {
-                Canvas.ctx.drawImage(this.screen, Canvas.dim.ratios["screen"][0] * Canvas.dim.width, Canvas.dim.ratios["screen"][1] * Canvas.dim.height, this.screen.width * Canvas.dim.shrinkFactor, this.screen.height * Canvas.dim.shrinkFactor);
+                Canvas.ctx.drawImage(this.screen, Canvas.dim.ratios["screen"][0] * Canvas.dim.width, Canvas.dim.ratios["screen"][1] * Canvas.dim.height, this.screen.width * Canvas.dim.shrink, this.screen.height * Canvas.dim.shrink);
                 Canvas.ctx.fillText('Match a pair of symbols for a safe busting multiplier!', Canvas.dim.ratios["instructionsTop"][0] * Canvas.dim.width, Canvas.dim.ratios["instructionsTop"][1] * Canvas.dim.height);
                 Canvas.ctx.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Canvas.dim.ratios["instructionsBottom"][0] * Canvas.dim.width, Canvas.dim.ratios["instructionsBottom"][1] * Canvas.dim.height);
                 Canvas.ctx.font = `${fontSize}px unlocked`;
@@ -324,13 +371,13 @@ export class Canvas {
                 break;
             }
             case Canvas.game.states["SPINNING"]: {
-                Canvas.ctx.putImageData(this.behindInstructions, Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height);
+                Canvas.ctx.putImageData(this.behindInst, Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height);
                 Canvas.ctx.fillText('SPINNING!', Canvas.dim.ratios["spinning"][0] * Canvas.dim.width, Canvas.dim.ratios["spinning"][1] * Canvas.dim.height);
                 break;
             }
             case Canvas.game.states["SPUN"]: {
-                Canvas.ctx.putImageData(this.behindInstructions, Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height);
-                Canvas.ctx.drawImage(this.screen, Canvas.dim.ratios["screen"][0] * Canvas.dim.width, Canvas.dim.ratios["screen"][1] * Canvas.dim.height, this.screen.width * Canvas.dim.shrinkFactor, this.screen.height * Canvas.dim.shrinkFactor);
+                Canvas.ctx.putImageData(this.behindInst, Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height);
+                Canvas.ctx.drawImage(this.screen, Canvas.dim.ratios["screen"][0] * Canvas.dim.width, Canvas.dim.ratios["screen"][1] * Canvas.dim.height, this.screen.width * Canvas.dim.shrink, this.screen.height * Canvas.dim.shrink);
                 // hard and shrink
                 Canvas.ctx.fillText("SAFE" + Canvas.game.result.toString(), Canvas.dim.ratios["spinning"][0] * Canvas.dim.width + 63, Canvas.dim.ratios["spinning"][1] * Canvas.dim.height);
                 // hard
@@ -339,7 +386,7 @@ export class Canvas {
                 break;
             }
             case Canvas.game.states["WON"]: {
-                Canvas.ctx.drawImage(Canvas.winScreen, Canvas.dim.ratios["winScreen"][0] * Canvas.dim.width, Canvas.dim.ratios["winScreen"][1] * Canvas.dim.height, Canvas.winScreen.width * Canvas.dim.shrinkFactor, Canvas.winScreen.height * Canvas.dim.shrinkFactor);
+                Canvas.ctx.drawImage(Canvas.winScreen, Canvas.dim.ratios["winScreen"][0] * Canvas.dim.width, Canvas.dim.ratios["winScreen"][1] * Canvas.dim.height, Canvas.winScreen.width * Canvas.dim.shrink, Canvas.winScreen.height * Canvas.dim.shrink);
                 Canvas.ctx.font = `${fontSize}px unlocked`;
                 // hard + shrinkFactor
                 Canvas.ctx.fillText("WIN", Canvas.dim.ratios["unlockedSafes"][0] * Canvas.dim.width + 20, Canvas.dim.ratios["unlockedSafes"][1] * Canvas.dim.height + 10);
@@ -348,34 +395,40 @@ export class Canvas {
                 Canvas.ctx.fillText(`YOU WIN £${amountWon}!`, Canvas.dim.ratios["spinning"][0] * Canvas.dim.width - 65, Canvas.dim.ratios["spinning"][1] * Canvas.dim.height);
                 break;
             }
+            case Canvas.game.states["LOST"]: {
+                Canvas.ctx.fillStyle = 'black';
+                Canvas.ctx.fillText(`NO LUCK THIS TIME!`, Canvas.dim.ratios["spinning"][0] * Canvas.dim.width - 170 -
+                    Canvas.dim.blackFont * Canvas.dim.shrink, Canvas.dim.ratios["spinning"][1] * Canvas.dim.height +
+                    Canvas.dim.blackFont * Canvas.dim.shrink);
+                Canvas.ctx.fillStyle = 'white';
+                Canvas.ctx.font = `${70}px instructions`;
+                Canvas.ctx.fillText(`Click to replay`, 290, 330);
+                Canvas.ctx.font = `${fontSize}px instructions`;
+                Canvas.ctx.fillText(`NO LUCK THIS TIME!`, Canvas.dim.ratios["spinning"][0] * Canvas.dim.width - 170, Canvas.dim.ratios["spinning"][1] * Canvas.dim.height);
+                break;
+            }
         }
     }
     static counter() {
         Canvas.count--;
         if (Canvas.count === 0) {
-            Canvas.dim.thirdLightsWidth = Canvas.lights.width / 3;
-            Canvas.dim.thirdDialWidth = Canvas.dial.width / 3;
+            Canvas.dim.thirdLightsW = Canvas.lights.width / 3;
+            Canvas.dim.thirdDialW = Canvas.dial.width / 3;
             Canvas.dim.sizeCanvas();
             Canvas.drawImages();
         }
     }
     static drawImages() {
         Canvas.ctx.drawImage(this.background, 0, 0, Canvas.dim.width, Canvas.dim.height);
-        const widthFactor = this.safe.width * Canvas.dim.shrinkFactor;
-        const heightFactor = this.safe.height * Canvas.dim.shrinkFactor;
+        const widthFactor = this.safe.width * Canvas.dim.shrink;
+        const heightFactor = this.safe.height * Canvas.dim.shrink;
         // Make a loop?
         if (Canvas.initialDraw) {
             // hard code and shrink
-            Canvas.behindInstructions = Canvas.ctx.getImageData(Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height, 800, 90);
-            Canvas.behindSafes["safe1"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe1"][0] * Canvas.dim.width, Canvas.dim.ratios["safe1"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe2"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe2"][0] * Canvas.dim.width, Canvas.dim.ratios["safe2"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe3"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe3"][0] * Canvas.dim.width, Canvas.dim.ratios["safe3"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe4"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe4"][0] * Canvas.dim.width, Canvas.dim.ratios["safe4"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe5"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe5"][0] * Canvas.dim.width, Canvas.dim.ratios["safe5"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe6"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe6"][0] * Canvas.dim.width, Canvas.dim.ratios["safe6"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe7"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe7"][0] * Canvas.dim.width, Canvas.dim.ratios["safe7"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe8"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe8"][0] * Canvas.dim.width, Canvas.dim.ratios["safe8"][1] * Canvas.dim.height, widthFactor, heightFactor);
-            Canvas.behindSafes["safe9"] = Canvas.ctx.getImageData(Canvas.dim.ratios["safe9"][0] * Canvas.dim.width, Canvas.dim.ratios["safe9"][1] * Canvas.dim.height, widthFactor, heightFactor);
+            Canvas.behindInst = Canvas.ctx.getImageData(Canvas.dim.ratios["instructions"][0] * Canvas.dim.width, Canvas.dim.ratios["instructions"][1] * Canvas.dim.height, 800, 90);
+            for (let i = 1; i <= 9; i++) {
+                Canvas.behindSafes[`safe${i}`] = Canvas.ctx.getImageData(Canvas.dim.ratios[`safe${i}`][0] * Canvas.dim.width, Canvas.dim.ratios[`safe${i}`][1] * Canvas.dim.height, widthFactor, heightFactor);
+            }
         }
         for (let i = 1; i <= 9; i++) {
             let s = "safe" + i.toString();
@@ -384,19 +437,19 @@ export class Canvas {
                 : Canvas.openSafe(i);
         }
         if (Canvas.game.state !== Canvas.game.states["WON"]) {
-            Canvas.ctx.drawImage(this.supportDial, Canvas.dim.ratios["supportDial"][0] * Canvas.dim.width, Canvas.dim.ratios["supportDial"][1] * Canvas.dim.height, this.supportDial.width * Canvas.dim.shrinkFactor, this.supportDial.height * Canvas.dim.shrinkFactor);
-            Canvas.ctx.drawImage(this.dial, 0, 0, Canvas.dim.thirdDialWidth, this.dial.height, Canvas.dim.ratios["dial"][0] * Canvas.dim.width, Canvas.dim.ratios["dial"][1] * Canvas.dim.height, Canvas.dim.thirdDialWidth * Canvas.dim.shrinkFactor, this.dial.height * Canvas.dim.shrinkFactor);
+            Canvas.ctx.drawImage(this.supportDial, Canvas.dim.ratios["supportDial"][0] * Canvas.dim.width, Canvas.dim.ratios["supportDial"][1] * Canvas.dim.height, this.supportDial.width * Canvas.dim.shrink, this.supportDial.height * Canvas.dim.shrink);
+            Canvas.ctx.drawImage(this.dial, 0, 0, Canvas.dim.thirdDialW, this.dial.height, Canvas.dim.ratios["dial"][0] * Canvas.dim.width, Canvas.dim.ratios["dial"][1] * Canvas.dim.height, Canvas.dim.thirdDialW * Canvas.dim.shrink, this.dial.height * Canvas.dim.shrink);
         }
         if (Canvas.initialDraw) {
-            Canvas.behindLightsTwo = Canvas.ctx.getImageData(Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth, this.lights.height);
-            Canvas.behindLightsOne = Canvas.ctx.getImageData(Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth, this.lights.height);
+            Canvas.behindLight2 = Canvas.ctx.getImageData(Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW, this.lights.height);
+            Canvas.behindLight1 = Canvas.ctx.getImageData(Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW, this.lights.height);
             Canvas.behindSpin = Canvas.ctx.getImageData(Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, this.spin.width, this.spin.height);
             Canvas.behindMarker = Canvas.ctx.getImageData(Canvas.dim.ratios["marker"][0] * Canvas.dim.width, Canvas.dim.ratios["marker"][1] * Canvas.dim.height, Canvas.marker.width / 2, Canvas.marker.height);
         }
         if (Canvas.game.state !== Canvas.game.states["WON"]) {
-            Canvas.ctx.drawImage(this.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, this.spin.width * Canvas.dim.shrinkFactor, this.spin.height * Canvas.dim.shrinkFactor);
-            Canvas.ctx.drawImage(this.lights, 0, 0, Canvas.dim.thirdLightsWidth, this.lights.height, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth * Canvas.dim.shrinkFactor, this.lights.height * Canvas.dim.shrinkFactor);
-            Canvas.ctx.drawImage(this.lights, Canvas.dim.thirdLightsWidth, 0, Canvas.dim.thirdLightsWidth, this.lights.height, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth * Canvas.dim.shrinkFactor, this.lights.height * Canvas.dim.shrinkFactor);
+            Canvas.ctx.drawImage(this.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, this.spin.width * Canvas.dim.shrink, this.spin.height * Canvas.dim.shrink);
+            Canvas.ctx.drawImage(this.lights, 0, 0, Canvas.dim.thirdLightsW, this.lights.height, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW * Canvas.dim.shrink, this.lights.height * Canvas.dim.shrink);
+            Canvas.ctx.drawImage(this.lights, Canvas.dim.thirdLightsW, 0, Canvas.dim.thirdLightsW, this.lights.height, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW * Canvas.dim.shrink, this.lights.height * Canvas.dim.shrink);
         }
         if (Canvas.fontsLoaded) {
             Canvas.writeWords(45);
@@ -407,10 +460,10 @@ export class Canvas {
         }
     }
     static drawLights() {
-        Canvas.ctx.putImageData(Canvas.behindLightsOne, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height);
-        Canvas.ctx.putImageData(Canvas.behindLightsTwo, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height);
-        Canvas.ctx.drawImage(Canvas.lights, Canvas.dim.xLights1 * Canvas.dim.thirdLightsWidth, 0, Canvas.dim.thirdLightsWidth, Canvas.lights.height, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth * Canvas.dim.shrinkFactor, Canvas.lights.height * Canvas.dim.shrinkFactor);
-        Canvas.ctx.drawImage(Canvas.lights, Canvas.dim.xLights2 * Canvas.dim.thirdLightsWidth, 0, Canvas.dim.thirdLightsWidth, Canvas.lights.height, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsWidth * Canvas.dim.shrinkFactor, Canvas.lights.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.putImageData(Canvas.behindLight1, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height);
+        Canvas.ctx.putImageData(Canvas.behindLight2, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height);
+        Canvas.ctx.drawImage(Canvas.lights, Canvas.dim.xLights1 * Canvas.dim.thirdLightsW, 0, Canvas.dim.thirdLightsW, Canvas.lights.height, Canvas.dim.ratios["lights1"][0] * Canvas.dim.width, Canvas.dim.ratios["lights1"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW * Canvas.dim.shrink, Canvas.lights.height * Canvas.dim.shrink);
+        Canvas.ctx.drawImage(Canvas.lights, Canvas.dim.xLights2 * Canvas.dim.thirdLightsW, 0, Canvas.dim.thirdLightsW, Canvas.lights.height, Canvas.dim.ratios["lights2"][0] * Canvas.dim.width, Canvas.dim.ratios["lights2"][1] * Canvas.dim.height, Canvas.dim.thirdLightsW * Canvas.dim.shrink, Canvas.lights.height * Canvas.dim.shrink);
     }
     // make it async?
     // Don't use hard numbers, save as constants 
@@ -429,7 +482,7 @@ export class Canvas {
         if (Canvas.game.state == Canvas.game.states["ZERO_SPINS"] || Canvas.game.state == Canvas.game.states["SPUN"] && !Canvas.resizing) {
             const set = new Set([index, index + 1, index + 2, index + 3, index + 4, index + 5, index + 6, index + 7]);
             Canvas.drawBackgroundAndSupport();
-            Canvas.rotate(Canvas.currentRotation, 0);
+            Canvas.rotate(Canvas.currentRot, 0);
             for (let i = 0; i < Canvas.sparks.length; i++) {
                 if (Canvas.sparks[i]) {
                     if (set.has(i)) {
@@ -459,7 +512,7 @@ export class Canvas {
             }
             else {
                 Canvas.drawBackgroundAndSupport();
-                Canvas.rotate(Canvas.currentRotation, 0);
+                Canvas.rotate(Canvas.currentRot, 0);
                 for (let i = 0; i < Canvas.sparks.length; i++) {
                     if (Canvas.sparks[i]) {
                         if (set.has(i)) {
@@ -486,7 +539,7 @@ export class Canvas {
         Canvas.ctx.arc(Canvas.dim.centerSupport[0], Canvas.dim.centerSupport[1], Canvas.dim.radiusSupport + 15, 0, Math.PI * 2);
         Canvas.ctx.clip();
         Canvas.ctx.drawImage(this.background, 0, 0, Canvas.dim.width, Canvas.dim.height);
-        Canvas.ctx.drawImage(this.supportDial, Canvas.dim.ratios["supportDial"][0] * Canvas.dim.width, Canvas.dim.ratios["supportDial"][1] * Canvas.dim.height, this.supportDial.width * Canvas.dim.shrinkFactor, this.supportDial.height * Canvas.dim.shrinkFactor);
+        Canvas.ctx.drawImage(this.supportDial, Canvas.dim.ratios["supportDial"][0] * Canvas.dim.width, Canvas.dim.ratios["supportDial"][1] * Canvas.dim.height, this.supportDial.width * Canvas.dim.shrink, this.supportDial.height * Canvas.dim.shrink);
         Canvas.ctx.restore();
     }
     // Method that flashes the "Spin" button. 
@@ -497,7 +550,7 @@ export class Canvas {
             Canvas.spinOn = false;
         }
         else {
-            Canvas.ctx.drawImage(Canvas.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, Canvas.spin.width * Canvas.dim.shrinkFactor, Canvas.spin.height * Canvas.dim.shrinkFactor);
+            Canvas.ctx.drawImage(Canvas.spin, Canvas.dim.ratios["spin"][0] * Canvas.dim.width, Canvas.dim.ratios["spin"][1] * Canvas.dim.height, Canvas.spin.width * Canvas.dim.shrink, Canvas.spin.height * Canvas.dim.shrink);
             Canvas.spinOn = true;
         }
     }
@@ -520,16 +573,18 @@ Canvas.notes = new Image();
 Canvas.ring = new Image();
 Canvas.winScreen = new Image();
 Canvas.marker = new Image();
+Canvas.panelBackg = new Image();
+Canvas.screenBackg = new Image();
 Canvas.star = new Image();
 Canvas.images = [Canvas.lights, Canvas.background, Canvas.safe, Canvas.safeOpen, Canvas.gold, Canvas.diamond,
     Canvas.coin, Canvas.ring, Canvas.notes, Canvas.sparkSafe, Canvas.screen, Canvas.supportDial, Canvas.dial, Canvas.spin, Canvas.marker,
-    Canvas.winScreen, Canvas.star];
+    Canvas.winScreen, Canvas.star, Canvas.panelBackg, Canvas.screenBackg];
 Canvas.count = Canvas.images.length;
 Canvas.behindSafes = {};
 // Runtime state variables
 Canvas.scale = 1;
-Canvas.currentRotation = 0;
-Canvas.scaleDirection = 1;
+Canvas.currentRot = 0;
+Canvas.scaleDir = 1;
 Canvas.fontsLoaded = false;
 Canvas.spinOn = true;
 Canvas.initialDraw = true;

@@ -56,15 +56,15 @@ export class Game{
         }
         this.boxes[9] = multipliers[0]
 
-        this.boxes[1] = 15
-        this.boxes[2] = 15
-        this.boxes[3] = 15
-        this.boxes[4] = 15
+        this.boxes[1] = 11
+        this.boxes[2] = 12
+        this.boxes[3] = 13
+        this.boxes[4] = 14
         this.boxes[5] = 15
-        this.boxes[6] = 15
-        this.boxes[7] = 15
-        this.boxes[8] = 15
-        this.boxes[9] = 15
+        this.boxes[6] = 16
+        this.boxes[7] = 17
+        this.boxes[8] = 18
+        this.boxes[9] = 19
     }
 
     public setWinSafes(){

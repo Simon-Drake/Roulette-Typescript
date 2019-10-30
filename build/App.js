@@ -5,10 +5,13 @@ export class App {
     // take away static?
     static init() {
         // initiate game and pass to canvas
-        let game = new Game();
-        Canvas.init(document.querySelector("canvas"), game);
+        App.game = new Game();
+        Canvas.init(document.querySelector("canvas"), App.game);
     }
     static gameLoop(timestamp) {
+        if (App.game.state == App.game.states["LOST"]) {
+            setTimeout(() => Canvas.implementLoss(), 3000);
+        }
         App.timeElapsed = timestamp;
         requestAnimationFrame(App.gameLoop);
     }
