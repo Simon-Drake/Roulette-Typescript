@@ -1,4 +1,4 @@
-import { Canvas } from './ux/Canvas.js';
+import { Draw } from './ux/Draw.js';
 import { Game } from './ux/Game.js';
 export class App {
     // insert access modifiers
@@ -6,11 +6,10 @@ export class App {
     static init() {
         // initiate game and pass to canvas
         App.game = new Game();
-        Canvas.init(document.querySelector("canvas"), App.game);
+        Draw.init(document.querySelector("canvas"), App.game);
     }
     static gameLoop(timestamp) {
-        if (App.game.state == App.game.states["LOST"]) {
-            setTimeout(() => Canvas.implementLoss(), 3000);
+        if (App.game.state == Game.states["LOST"]) {
         }
         App.timeElapsed = timestamp;
         requestAnimationFrame(App.gameLoop);

@@ -1,25 +1,27 @@
 import {Arithmetic} from './Arithmetic.js'
 
 export class Game{
-    bet: number = 10
-
-    boxes: object = {};
-    spins: number = 0;
-    result: number;
-    multipliers: number[] = [];
-    unlockedSafes: number[] = [];
-    unlockedMultipliers: any = new Set()
-    winSafes: [number, number];
-    winSafesStrings: [string, string] = ['', '']
-
-    state: number
-    states: object = {
+    
+    public static states: object = {
         "ZERO_SPINS" : 0,
         "SPINNING" : 1,
-        "SPUN" : 2,
-        "WON" : 3, 
-        "LOST" : 4
+        "ANIMATING" : 2,
+        "SPUN" : 3,
+        "WON" : 4,
+        "LOST" : 5
     }
+    public static bet: number = 10
+
+    public boxes: object = {};
+    public spins: number = 0;
+    public result: number;
+    public multipliers: number[] = [];
+    public unlockedSafes: number[] = [];
+    public unlockedMultipliers: any = new Set()
+    public winSafes: [number, number];
+    public winSafesStrings: [string, string] = ['', '']
+    public state: number
+
     constructor(){
         this.multipliers.push(Arithmetic.getRandomInt(5)+15)
         this.completeMultipliers()

@@ -1,88 +1,106 @@
-export class Dimensions{
+export class Dim{
 
-        public canvasEl: HTMLCanvasElement;
+        public static canvasEl: HTMLCanvasElement;
+
+        public static maxWidth: number = 916;
+        public static maxHeight: number = 623;
+        public static openSafeXTrans: number = -35
+        public static openSafeYTrans: number = -25
+        public static priseXTrans: number = Dim.openSafeXTrans + 10
+        public static priseYTrans: number = Dim.openSafeYTrans + 6
+        public static fontXTrans: number = Dim.priseXTrans + 65
+        public static fontYTrans: number = Dim.priseYTrans + 110
+        public static starXTrans: number = Dim.fontXTrans - 15
+        public static starYTrans: number = Dim.fontYTrans - 70
+
+        public static instFontSize = 45
+        public static headrFontSize = 110
+        public static winScrnFontSize = 75
+        public static replayFontSize = 75
+        public static maxStarDistance = 200
+        public static blackFont = 4
 
         // Dimensions
         public width: number;
         public height: number;
-        public maxWidth: number = 916;
-        public maxHeight: number = 623;
-        public widthToHeightRatio: number = this.maxWidth / this.maxHeight
-        public heightToWidthRatio: number = this.maxHeight / this.maxWidth
+        public widthToHeightRatio: number = Dim.maxWidth / Dim.maxHeight
+        public heightToWidthRatio: number = Dim.maxHeight / Dim.maxWidth
         public shrink: number;
         public radiusSupport: number;
         public radiusSpin: number;
         public radiusDial: number;
-        public centrSupp: [number,number];
         public centrDial: [number,number];
-        public openSafeXTrans: number = -35
-        public openSafeYTrans: number = -25
-        public priseXTrans: number = this.openSafeXTrans + 10
-        public priseYTrans: number = this.openSafeYTrans + 6
-        public fontXTrans: number = this.priseXTrans + 65
-        public fontYTrans: number = this.priseYTrans + 110
-        public starXTrans: number = this.fontXTrans - 15
-        public starYTrans: number = this.fontYTrans - 70
+
         public thirdLightsW: number;
         public thirdDialW: number;
-        public blackFont: number = 4
         public winImageSX: number = 0;    
         public xLights1: number = 0;
         public xLights2: number = 1;
+        public scale: number = 1
+        public scaleDir: number = 1
+
+
+
+
+
     
         // How far left and how far down as a ratio of the size of the Canvas
         // Needed for browser resizing 
         public ratios: object = {
-            "safe1" : [(50/this.maxWidth), (173/this.maxHeight)],
-            "safe2" : [(220/this.maxWidth), (173/this.maxHeight)],
-            "safe3" : [(390/this.maxWidth), (173/this.maxHeight)],
-            "safe4" : [(50/this.maxWidth), (320/this.maxHeight)],
-            "safe5" : [(220/this.maxWidth), (320/this.maxHeight)],
-            "safe6" : [(390/this.maxWidth), (320/this.maxHeight)],
-            "safe7" : [(50/this.maxWidth), (467/this.maxHeight)],
-            "safe8" : [(220/this.maxWidth), (467/this.maxHeight)],
-            "safe9" : [(390/this.maxWidth), (467/this.maxHeight)],
-            "screen" : [(578/this.maxWidth), (183/this.maxHeight)],
-            "winScreen" : [(600/this.maxWidth), (183/this.maxHeight)],
-            "supportDial" : [(582/this.maxWidth), (280/this.maxHeight)],
-            "dial" : [(593/this.maxWidth), (318/this.maxHeight)],
-            "marker" : [(709/this.maxWidth), (270/this.maxHeight)],
-            "spin" : [(695/this.maxWidth), (420/this.maxHeight)],
-            "lights1" : [(582/this.maxWidth), (270/this.maxHeight)],
-            "lights2" : [(758/this.maxWidth), (270/this.maxHeight)],
-            "spinning" : [(270/this.maxWidth), (115/this.maxHeight)],
-            "instructions" : [(65/this.maxWidth), (30/this.maxHeight)],
-            "instructionsTop" : [(68/this.maxWidth), (65/this.maxHeight)],
-            "instructionsBottom" : [(68/this.maxWidth), (110/this.maxHeight)],
-            "panelBackground" : [(31/this.maxWidth), (12/this.maxHeight)],
-            "screenBackground" : [(600/this.maxWidth), (186/this.maxHeight)],
-            "unlockedSafes" : [(642/this.maxWidth), (243/this.maxHeight)]
+            "safe1" : [(50/Dim.maxWidth), (173/Dim.maxHeight)],
+            "safe2" : [(220/Dim.maxWidth), (173/Dim.maxHeight)],
+            "safe3" : [(390/Dim.maxWidth), (173/Dim.maxHeight)],
+            "safe4" : [(50/Dim.maxWidth), (320/Dim.maxHeight)],
+            "safe5" : [(220/Dim.maxWidth), (320/Dim.maxHeight)],
+            "safe6" : [(390/Dim.maxWidth), (320/Dim.maxHeight)],
+            "safe7" : [(50/Dim.maxWidth), (467/Dim.maxHeight)],
+            "safe8" : [(220/Dim.maxWidth), (467/Dim.maxHeight)],
+            "safe9" : [(390/Dim.maxWidth), (467/Dim.maxHeight)],
+            "screen" : [(578/Dim.maxWidth), (183/Dim.maxHeight)],
+            "winScreen" : [(600/Dim.maxWidth), (183/Dim.maxHeight)],
+            "supportDial" : [(582/Dim.maxWidth), (280/Dim.maxHeight)],
+            "dial" : [(593/Dim.maxWidth), (318/Dim.maxHeight)],
+            "marker" : [(709/Dim.maxWidth), (270/Dim.maxHeight)],
+            "spin" : [(695/Dim.maxWidth), (420/Dim.maxHeight)],
+            "lights1" : [(582/Dim.maxWidth), (270/Dim.maxHeight)],
+            "lights2" : [(758/Dim.maxWidth), (270/Dim.maxHeight)],
+            "spinning" : [(270/Dim.maxWidth), (115/Dim.maxHeight)],
+            "noLuckText" : [(100/Dim.maxWidth), (115/Dim.maxHeight)],
+            "safeText" : [(333/Dim.maxWidth), (115/Dim.maxHeight)],
+            "replayText" : [(290/Dim.maxWidth), (330/Dim.maxHeight)],
+            "instructions" : [(65/Dim.maxWidth), (30/Dim.maxHeight)],
+            "instructionsTop" : [(68/Dim.maxWidth), (65/Dim.maxHeight)],
+            "instructionsBottom" : [(68/Dim.maxWidth), (110/Dim.maxHeight)],
+            "panelBackground" : [(31/Dim.maxWidth), (12/Dim.maxHeight)],
+            "screenBackground" : [(600/Dim.maxWidth), (186/Dim.maxHeight)],
+            "unlockedSafes" : [(642/Dim.maxWidth), (243/Dim.maxHeight)],
+            "winText" : [(662/Dim.maxWidth), (253/Dim.maxHeight)]
         }
 
     constructor(el){
-        this.canvasEl = el
+        Dim.canvasEl = el
     }
 
     public sizeCanvas() {
         // If the browser is large enough scale the canvas to its maximum dimensions.
-	    if(document.body.clientWidth > this.maxWidth && window.innerHeight > this.maxHeight) {
-            this.canvasEl.width = this.maxWidth;
-            this.width = this.maxWidth
-            this.canvasEl.height = this.maxHeight;
-            this.height = this.maxHeight
+	    if(document.body.clientWidth > Dim.maxWidth && window.innerHeight > Dim.maxHeight) {
+            Dim.canvasEl.width = Dim.maxWidth;
+            this.width = Dim.maxWidth
+            Dim.canvasEl.height = Dim.maxHeight;
+            this.height = Dim.maxHeight
         }
         else {
             // If both width and height are smaller than max determine which ratio is smallest and rescale accordingly.
             // Else if its just width than scale to width otherwise its height and scale to height. 
-            document.body.clientWidth < this.maxWidth && document.body.clientHeight < this.maxHeight 
-                ? document.body.clientWidth/this.maxWidth <= document.body.clientHeight/this.maxHeight 
+            document.body.clientWidth < Dim.maxWidth && document.body.clientHeight < Dim.maxHeight 
+                ? document.body.clientWidth/Dim.maxWidth <= document.body.clientHeight/Dim.maxHeight 
                     ? this.scaleToWidth() 
                     : this.scaleToHeight() 
-                : document.body.clientWidth < this.maxWidth 
+                : document.body.clientWidth < Dim.maxWidth 
                     ? this.scaleToWidth() 
                     : this.scaleToHeight()
         }
-        this.shrink = this.width/this.maxWidth
+        this.shrink = this.width/Dim.maxWidth
     }
 
 
@@ -93,16 +111,16 @@ export class Dimensions{
     }
 
     private scaleToWidth() {
-        this.canvasEl.width = document.body.clientWidth*0.95;
+        Dim.canvasEl.width = document.body.clientWidth*0.95;
         this.width = document.body.clientWidth*0.95;
-        this.canvasEl.height = this.width*this.heightToWidthRatio;
+        Dim.canvasEl.height = this.width*this.heightToWidthRatio;
         this.height = this.width*this.heightToWidthRatio;
     }
 
     private scaleToHeight() {
-        this.canvasEl.height = document.body.clientHeight*0.95;
+        Dim.canvasEl.height = document.body.clientHeight*0.95;
         this.height = document.body.clientHeight*0.95;
-        this.canvasEl.width = this.height*this.widthToHeightRatio;
+        Dim.canvasEl.width = this.height*this.widthToHeightRatio;
         this.width = this.height*this.widthToHeightRatio;
     }
 
@@ -111,8 +129,6 @@ export class Dimensions{
         this.radiusSupport = (supportWidth-15)/2*this.shrink
         this.radiusSpin = spinWidth/2*this.shrink
         this.radiusDial = this.radiusSupport*0.9
-        // plus 30 on the height for marker, hard coded?
-        this.centrSupp = [this.ratios["supportDial"][0]*this.width+supportWidth/2*this.shrink, this.ratios["supportDial"][1]*this.height+30*this.shrink+(supportHeight-30*this.shrink)/2*this.shrink]
         this.centrDial = [this.ratios["dial"][0]*this.width+dialWidth/6*this.shrink, this.ratios["dial"][1]*this.height+dialHeight/2*this.shrink]
 
     }
@@ -121,10 +137,10 @@ export class Dimensions{
     public async getPoint(){
         const a = Math.random() * 2 * Math.PI
         // hardcode
-        const r = (this.radiusSupport-5) * Math.sqrt(Math.random())
+        const r = (this.radiusSupport-5*this.shrink) * Math.sqrt(Math.random())
 
         if(Math.sqrt((r*Math.cos(a))**2 + (r*Math.sin(a))**2) > this.radiusDial) {
-            return [r*Math.cos(a)+this.centrSupp[0], r*Math.sin(a)+this.centrSupp[1]]
+            return [r*Math.cos(a)+this.centrDial[0], r*Math.sin(a)+this.centrDial[1]]
         }
         else {
             return this.getPoint()
@@ -141,6 +157,16 @@ export class Dimensions{
         this.xLights2 < 2 
             ? this.xLights2 ++ 
             : this.xLights2 = 0
+    }
+
+    public changeScale(){
+        this.scale += 0.05 * this.scaleDir
+
+        if(this.scale > 1.4)
+            this.scaleDir = -1
+
+        if(this.scale <= 1)
+            this.scaleDir = +1
     }
 
 }

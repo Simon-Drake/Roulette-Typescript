@@ -10,20 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Arithmetic } from './Arithmetic.js';
 export class Game {
     constructor() {
-        this.bet = 10;
         this.boxes = {};
         this.spins = 0;
         this.multipliers = [];
         this.unlockedSafes = [];
         this.unlockedMultipliers = new Set();
         this.winSafesStrings = ['', ''];
-        this.states = {
-            "ZERO_SPINS": 0,
-            "SPINNING": 1,
-            "SPUN": 2,
-            "WON": 3,
-            "LOST": 4
-        };
         this.multipliers.push(Arithmetic.getRandomInt(5) + 15);
         this.completeMultipliers();
     }
@@ -89,3 +81,12 @@ export class Game {
         return s.substr(0, s.length - 3);
     }
 }
+Game.states = {
+    "ZERO_SPINS": 0,
+    "SPINNING": 1,
+    "ANIMATING": 2,
+    "SPUN": 3,
+    "WON": 4,
+    "LOST": 5
+};
+Game.bet = 10;
