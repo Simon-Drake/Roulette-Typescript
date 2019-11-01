@@ -4,8 +4,6 @@ tsc
 
 npx serve
 
-There is a shell script to help do this. 
-
 -------------------------------------------------
 
 If you want to force a win uncomment lines: 

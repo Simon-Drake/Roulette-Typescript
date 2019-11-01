@@ -63,16 +63,16 @@ export class Game {
             multipliers.splice(multipliers.indexOf(this.boxes[i]), 1);
         }
         this.boxes[9] = multipliers[0];
-        // Uncomment to test lose scenario
-        this.boxes[1] = 11;
-        this.boxes[2] = 12;
-        this.boxes[3] = 13;
-        this.boxes[4] = 14;
-        this.boxes[5] = 15;
-        this.boxes[6] = 16;
-        this.boxes[7] = 17;
-        this.boxes[8] = 18;
-        this.boxes[9] = 19;
+        // // Uncomment to test lose scenario
+        // this.boxes[1] = 11
+        // this.boxes[2] = 12
+        // this.boxes[3] = 13
+        // this.boxes[4] = 14
+        // this.boxes[5] = 15
+        // this.boxes[6] = 16
+        // this.boxes[7] = 17
+        // this.boxes[8] = 18
+        // this.boxes[9] = 19
         // // Uncomment to test win scenario
         // this.boxes[1] = 15
         // this.boxes[2] = 15

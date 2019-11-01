@@ -456,19 +456,19 @@ export class Draw {
  */
     static mapMultiplierToImage(multiplier) {
         switch (multiplier) {
-            // Uncomment to test lose scenario
-            case 11: {
-                return Draw.coin;
-            }
-            case 12: {
-                return Draw.coin;
-            }
-            case 13: {
-                return Draw.coin;
-            }
-            case 14: {
-                return Draw.coin;
-            }
+            // // Uncomment to test lose scenario
+            // case 11 : {
+            //     return Draw.coin
+            // }
+            // case 12 : {
+            //     return Draw.coin
+            // }
+            // case 13 : {
+            //     return Draw.coin
+            // }
+            // case 14 : {
+            //     return Draw.coin
+            // }
             case 15: {
                 return Draw.coin;
             }
