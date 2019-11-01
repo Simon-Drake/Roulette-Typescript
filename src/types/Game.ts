@@ -1,7 +1,13 @@
-import {Arithmetic} from './Arithmetic.js'
+import {Arithmetic} from '../maths/Arithmetic.js'
 
+/**
+ * Game class handles game state
+ */
 export class Game{
     
+    /**
+     * Game static variables
+     */
     public static states: object = {
         "ZERO_SPINS" : 0,
         "SPINNING" : 1,
@@ -12,6 +18,9 @@ export class Game{
     }
     public static bet: number = 10
 
+    /**
+     * Game state variables
+     */
     public boxes: object = {};
     public spins: number = 0;
     public result: number;
@@ -22,17 +31,27 @@ export class Game{
     public winSafesStrings: [string, string] = ['', '']
     public state: number
 
+    /**
+     * Constructor initialises multipliers and boxes
+     */
     constructor(){
         this.multipliers.push(Arithmetic.getRandomInt(5)+15)
         this.completeMultipliers()
     }
 
-    // use then not all as they are changing and testing the same list
+    /**
+     * Async method uses recursive helper
+     * Sets multipliers and boxes
+     */
     public async completeMultipliers(){
         await this.pushOne().then(() => this.pushOne())
         this.setBoxes()
     }
 
+    /**
+     * Finds 2 more random multipliers
+     * Recusrive
+     */
     public async pushOne(){
         let int = Arithmetic.getRandomInt(5)+15
         this.multipliers.indexOf(int) === -1
@@ -40,16 +59,9 @@ export class Game{
             : this.pushOne()
     }
 
-    public assessWin(m){
-        if (this.unlockedMultipliers.has(m)) {
-            return true
-        }
-        else {
-            this.unlockedMultipliers.add(m)
-            return false
-        }
-    }
-
+    /**
+     * Sets 9 boxes to multipliers
+     */
     public setBoxes(){
         let multipliers = this.multipliers.concat(this.multipliers).concat(this.multipliers)
         for (let i = 1; i <= 8; i++){
@@ -69,11 +81,33 @@ export class Game{
         this.boxes[9] = 19
     }
 
+    /**
+     * Method used to find out if player won
+     * @param m multiplier
+     * @returns boolean, win is true otherwise false
+     */
+    public assessWin(m){
+        if (this.unlockedMultipliers.has(m)) {
+            return true
+        }
+        else {
+            this.unlockedMultipliers.add(m)
+            return false
+        }
+    }
+
+    /**
+     * WinSafes setter
+     */
     public setWinSafes(){
         this.winSafes = [this.unlockedSafes[this.unlockedSafes.length-1], this.returnBox(this.boxes[this.unlockedSafes[this.unlockedSafes.length-1]], this.unlockedSafes)]
     }
 
-    // may be better way to do this, new dict?
+    /**
+     * Returns box with multiplier
+     * @param m multiplier
+     * @param boxes boxes object
+     */
     private returnBox(m, boxes){
         for(let i = 0; i < boxes.length; i++) {
             if(this.boxes[boxes[i]] == m)
@@ -81,6 +115,9 @@ export class Game{
         }
     }
 
+    /**
+     * @returns returns unlockes safes string for screen
+     */
     public getUnlockedSafesString(){
         let s = ''
         for(let i = 0; i < this.unlockedSafes.length; i++){

@@ -1,86 +1,95 @@
+/**
+ * Class used to store and change dimensions and parameters
+ */
 export class Dim{
 
-        public static canvasEl: HTMLCanvasElement;
+    /**
+     * Static variables that won't change during a game
+     */
+    public static canvasEl: HTMLCanvasElement;
+    public static maxWidth: number = 916;
+    public static maxHeight: number = 623;
+    public static openSafeXTrans: number = -35
+    public static openSafeYTrans: number = -25
+    public static priseXTrans: number = Dim.openSafeXTrans + 10
+    public static priseYTrans: number = Dim.openSafeYTrans + 6
+    public static fontXTrans: number = Dim.priseXTrans + 65
+    public static fontYTrans: number = Dim.priseYTrans + 110
+    public static starXTrans: number = Dim.fontXTrans - 15
+    public static starYTrans: number = Dim.fontYTrans - 70
+    public static instFontSize = 45
+    public static headrFontSize = 110
+    public static winScrnFontSize = 75
+    public static replayFontSize = 75
+    public static maxStarDistance = 200
+    public static blackFont = 4
 
-        public static maxWidth: number = 916;
-        public static maxHeight: number = 623;
-        public static openSafeXTrans: number = -35
-        public static openSafeYTrans: number = -25
-        public static priseXTrans: number = Dim.openSafeXTrans + 10
-        public static priseYTrans: number = Dim.openSafeYTrans + 6
-        public static fontXTrans: number = Dim.priseXTrans + 65
-        public static fontYTrans: number = Dim.priseYTrans + 110
-        public static starXTrans: number = Dim.fontXTrans - 15
-        public static starYTrans: number = Dim.fontYTrans - 70
+    // Variables that can change during a game
+    public width: number;
+    public height: number;
+    public widthToHeightRatio: number = Dim.maxWidth / Dim.maxHeight
+    public heightToWidthRatio: number = Dim.maxHeight / Dim.maxWidth
+    public shrink: number;
+    public radiusSupport: number;
+    public radiusSpin: number;
+    public radiusDial: number;
+    public centrDial: [number,number];
 
-        public static instFontSize = 45
-        public static headrFontSize = 110
-        public static winScrnFontSize = 75
-        public static replayFontSize = 75
-        public static maxStarDistance = 200
-        public static blackFont = 4
-
-        // Dimensions
-        public width: number;
-        public height: number;
-        public widthToHeightRatio: number = Dim.maxWidth / Dim.maxHeight
-        public heightToWidthRatio: number = Dim.maxHeight / Dim.maxWidth
-        public shrink: number;
-        public radiusSupport: number;
-        public radiusSpin: number;
-        public radiusDial: number;
-        public centrDial: [number,number];
-
-        public thirdLightsW: number;
-        public thirdDialW: number;
-        public winImageSX: number = 0;    
-        public xLights1: number = 0;
-        public xLights2: number = 1;
-        public scale: number = 1
-        public scaleDir: number = 1
-
-
-
+    public thirdLightsW: number;
+    public thirdDialW: number;
+    public winImageSX: number = 0;    
+    public xLights1: number = 0;
+    public xLights2: number = 1;
+    public scale: number = 1
+    public scaleDir: number = 1
 
 
-    
-        // How far left and how far down as a ratio of the size of the Canvas
-        // Needed for browser resizing 
-        public ratios: object = {
-            "safe1" : [(50/Dim.maxWidth), (173/Dim.maxHeight)],
-            "safe2" : [(220/Dim.maxWidth), (173/Dim.maxHeight)],
-            "safe3" : [(390/Dim.maxWidth), (173/Dim.maxHeight)],
-            "safe4" : [(50/Dim.maxWidth), (320/Dim.maxHeight)],
-            "safe5" : [(220/Dim.maxWidth), (320/Dim.maxHeight)],
-            "safe6" : [(390/Dim.maxWidth), (320/Dim.maxHeight)],
-            "safe7" : [(50/Dim.maxWidth), (467/Dim.maxHeight)],
-            "safe8" : [(220/Dim.maxWidth), (467/Dim.maxHeight)],
-            "safe9" : [(390/Dim.maxWidth), (467/Dim.maxHeight)],
-            "screen" : [(578/Dim.maxWidth), (183/Dim.maxHeight)],
-            "winScreen" : [(600/Dim.maxWidth), (183/Dim.maxHeight)],
-            "supportDial" : [(582/Dim.maxWidth), (280/Dim.maxHeight)],
-            "dial" : [(593/Dim.maxWidth), (318/Dim.maxHeight)],
-            "marker" : [(709/Dim.maxWidth), (270/Dim.maxHeight)],
-            "spin" : [(695/Dim.maxWidth), (420/Dim.maxHeight)],
-            "lights1" : [(582/Dim.maxWidth), (270/Dim.maxHeight)],
-            "lights2" : [(758/Dim.maxWidth), (270/Dim.maxHeight)],
-            "spinning" : [(270/Dim.maxWidth), (115/Dim.maxHeight)],
-            "noLuckText" : [(100/Dim.maxWidth), (115/Dim.maxHeight)],
-            "safeText" : [(333/Dim.maxWidth), (115/Dim.maxHeight)],
-            "replayText" : [(290/Dim.maxWidth), (330/Dim.maxHeight)],
-            "instructions" : [(65/Dim.maxWidth), (30/Dim.maxHeight)],
-            "instructionsTop" : [(68/Dim.maxWidth), (65/Dim.maxHeight)],
-            "instructionsBottom" : [(68/Dim.maxWidth), (110/Dim.maxHeight)],
-            "panelBackground" : [(31/Dim.maxWidth), (12/Dim.maxHeight)],
-            "screenBackground" : [(600/Dim.maxWidth), (186/Dim.maxHeight)],
-            "unlockedSafes" : [(642/Dim.maxWidth), (243/Dim.maxHeight)],
-            "winText" : [(662/Dim.maxWidth), (253/Dim.maxHeight)]
-        }
+    /**
+     * How far left and how far down as a ratio of the size of the Canvas
+     * Needed for browser resizing
+     */
+    public ratios: object = {
+        "safe1" : [(50/Dim.maxWidth), (173/Dim.maxHeight)],
+        "safe2" : [(220/Dim.maxWidth), (173/Dim.maxHeight)],
+        "safe3" : [(390/Dim.maxWidth), (173/Dim.maxHeight)],
+        "safe4" : [(50/Dim.maxWidth), (320/Dim.maxHeight)],
+        "safe5" : [(220/Dim.maxWidth), (320/Dim.maxHeight)],
+        "safe6" : [(390/Dim.maxWidth), (320/Dim.maxHeight)],
+        "safe7" : [(50/Dim.maxWidth), (467/Dim.maxHeight)],
+        "safe8" : [(220/Dim.maxWidth), (467/Dim.maxHeight)],
+        "safe9" : [(390/Dim.maxWidth), (467/Dim.maxHeight)],
+        "screen" : [(578/Dim.maxWidth), (183/Dim.maxHeight)],
+        "winScreen" : [(600/Dim.maxWidth), (183/Dim.maxHeight)],
+        "supportDial" : [(582/Dim.maxWidth), (280/Dim.maxHeight)],
+        "dial" : [(593/Dim.maxWidth), (318/Dim.maxHeight)],
+        "marker" : [(709/Dim.maxWidth), (270/Dim.maxHeight)],
+        "spin" : [(695/Dim.maxWidth), (420/Dim.maxHeight)],
+        "lights1" : [(582/Dim.maxWidth), (270/Dim.maxHeight)],
+        "lights2" : [(758/Dim.maxWidth), (270/Dim.maxHeight)],
+        "spinning" : [(270/Dim.maxWidth), (115/Dim.maxHeight)],
+        "noLuckText" : [(100/Dim.maxWidth), (115/Dim.maxHeight)],
+        "safeText" : [(333/Dim.maxWidth), (115/Dim.maxHeight)],
+        "replayText" : [(290/Dim.maxWidth), (330/Dim.maxHeight)],
+        "instructions" : [(65/Dim.maxWidth), (30/Dim.maxHeight)],
+        "instructionsTop" : [(68/Dim.maxWidth), (65/Dim.maxHeight)],
+        "instructionsBottom" : [(68/Dim.maxWidth), (110/Dim.maxHeight)],
+        "panelBackground" : [(31/Dim.maxWidth), (12/Dim.maxHeight)],
+        "screenBackground" : [(600/Dim.maxWidth), (186/Dim.maxHeight)],
+        "unlockedSafes" : [(642/Dim.maxWidth), (243/Dim.maxHeight)],
+        "winText" : [(662/Dim.maxWidth), (253/Dim.maxHeight)]
+    }
 
+    /**
+     * Dimension object constructor
+     * @param el Canvas element
+     */
     constructor(el){
         Dim.canvasEl = el
     }
 
+    /**
+     * Uses canvas and window size to set the dimensions of the canvas
+     */
     public sizeCanvas() {
         // If the browser is large enough scale the canvas to its maximum dimensions.
 	    if(document.body.clientWidth > Dim.maxWidth && window.innerHeight > Dim.maxHeight) {
@@ -103,13 +112,19 @@ export class Dim{
         this.shrink = this.width/Dim.maxWidth
     }
 
-
+    /**
+     * Changes sx parameter of drawImage to draw different sections of a png
+     * @param width width of image
+     */
     public changeSX(width){
         this.winImageSX == 0
             ? this.winImageSX = width/2
             : this.winImageSX = 0
     }
 
+    /**
+     * If width is smallest in ratio we scale to it
+     */
     private scaleToWidth() {
         Dim.canvasEl.width = document.body.clientWidth*0.95;
         this.width = document.body.clientWidth*0.95;
@@ -117,6 +132,9 @@ export class Dim{
         this.height = this.width*this.heightToWidthRatio;
     }
 
+    /**
+     * If height is smallest in ratio we scale to it
+     */
     private scaleToHeight() {
         Dim.canvasEl.height = document.body.clientHeight*0.95;
         this.height = document.body.clientHeight*0.95;
@@ -125,6 +143,9 @@ export class Dim{
     }
 
 
+    /** 
+     * Sets radii and centers
+    */
     public setDimensions(supportWidth, supportHeight, dialWidth, dialHeight, spinWidth){
         this.radiusSupport = (supportWidth-15)/2*this.shrink
         this.radiusSpin = spinWidth/2*this.shrink
@@ -133,7 +154,9 @@ export class Dim{
 
     }
 
-    // decrease radius. some are on outer grip
+    /**
+     * Recursive functions used to get a point for a spark on the dial
+     */
     public async getPoint(){
         const a = Math.random() * 2 * Math.PI
         // hardcode
@@ -147,9 +170,10 @@ export class Dim{
         }
     }
 
-    // Can we do change lights with save and restore? What is more expensive?
+    /**
+     * Changes sx for lights
+     */
     public changeLights() {
-        // Change the sx translation for both lights
         this.xLights1 < 2 
             ? this.xLights1 ++ 
             : this.xLights1 = 0
@@ -159,6 +183,9 @@ export class Dim{
             : this.xLights2 = 0
     }
 
+    /**
+     * Changes scale of image for win animation
+     */
     public changeScale(){
         this.scale += 0.05 * this.scaleDir
 

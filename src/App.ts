@@ -1,24 +1,34 @@
 import {Draw} from './ux/Draw.js'
-import {Game} from './ux/Game.js'
+import {Game} from './types/Game.js'
 
 
+/**
+ * Main class which initialised the app and runs animation frame
+ */
 export class App {
-	public static timeElapsed: number;
+
 	public static game: Game;
-	// insert access modifiers
-	// take away static?
-	static init() {
+	
+	/**
+	 * Initialising method
+	 */
+	public static init() {
 		// initiate game and pass to canvas
 		App.game = new Game()
 		Draw.init(<HTMLCanvasElement>document.querySelector("canvas"), App.game)
-		}
-	static gameLoop(timestamp) {
-		if(App.game.state == Game.states["LOST"]){
-		}
-		App.timeElapsed = timestamp
+	}
+	
+	/**
+	 * Game loop
+	 */
+	public static gameLoop() {
 		requestAnimationFrame(App.gameLoop)
 	}
 }
+
+/**
+ * Main method
+ */
 App.init()
 requestAnimationFrame(App.gameLoop)
 

@@ -1,8 +1,8 @@
-import {Spark} from './Spark.js'
-import {Game} from './Game.js'
-import {Star} from './Star.js'
+import {Spark} from '../types/Spark.js'
+import {Game} from '../types/Game.js'
+import {Star} from '../types/Star.js'
 import {Dim} from './Dimensions.js'
-import {Arithmetic} from './Arithmetic.js'
+import {Arithmetic} from '../maths/Arithmetic.js'
 
 /**
  * Class related to drawing

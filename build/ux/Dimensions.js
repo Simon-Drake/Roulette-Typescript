@@ -7,15 +7,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+/**
+ * Class used to store and change dimensions and parameters
+ */
 export class Dim {
+    /**
+     * Dimension object constructor
+     * @param el Canvas element
+     */
     constructor(el) {
         this.widthToHeightRatio = Dim.maxWidth / Dim.maxHeight;
         this.heightToWidthRatio = Dim.maxHeight / Dim.maxWidth;
         this.winImageSX = 0;
         this.xLights1 = 0;
         this.xLights2 = 1;
-        // How far left and how far down as a ratio of the size of the Canvas
-        // Needed for browser resizing 
+        this.scale = 1;
+        this.scaleDir = 1;
+        /**
+         * How far left and how far down as a ratio of the size of the Canvas
+         * Needed for browser resizing
+         */
         this.ratios = {
             "safe1": [(50 / Dim.maxWidth), (173 / Dim.maxHeight)],
             "safe2": [(220 / Dim.maxWidth), (173 / Dim.maxHeight)],
@@ -48,6 +59,9 @@ export class Dim {
         };
         Dim.canvasEl = el;
     }
+    /**
+     * Uses canvas and window size to set the dimensions of the canvas
+     */
     sizeCanvas() {
         // If the browser is large enough scale the canvas to its maximum dimensions.
         if (document.body.clientWidth > Dim.maxWidth && window.innerHeight > Dim.maxHeight) {
@@ -69,30 +83,45 @@ export class Dim {
         }
         this.shrink = this.width / Dim.maxWidth;
     }
+    /**
+     * Changes sx parameter of drawImage to draw different sections of a png
+     * @param width width of image
+     */
     changeSX(width) {
         this.winImageSX == 0
             ? this.winImageSX = width / 2
             : this.winImageSX = 0;
     }
+    /**
+     * If width is smallest in ratio we scale to it
+     */
     scaleToWidth() {
         Dim.canvasEl.width = document.body.clientWidth * 0.95;
         this.width = document.body.clientWidth * 0.95;
         Dim.canvasEl.height = this.width * this.heightToWidthRatio;
         this.height = this.width * this.heightToWidthRatio;
     }
+    /**
+     * If height is smallest in ratio we scale to it
+     */
     scaleToHeight() {
         Dim.canvasEl.height = document.body.clientHeight * 0.95;
         this.height = document.body.clientHeight * 0.95;
         Dim.canvasEl.width = this.height * this.widthToHeightRatio;
         this.width = this.height * this.widthToHeightRatio;
     }
+    /**
+     * Sets radii and centers
+    */
     setDimensions(supportWidth, supportHeight, dialWidth, dialHeight, spinWidth) {
         this.radiusSupport = (supportWidth - 15) / 2 * this.shrink;
         this.radiusSpin = spinWidth / 2 * this.shrink;
         this.radiusDial = this.radiusSupport * 0.9;
         this.centrDial = [this.ratios["dial"][0] * this.width + dialWidth / 6 * this.shrink, this.ratios["dial"][1] * this.height + dialHeight / 2 * this.shrink];
     }
-    // decrease radius. some are on outer grip
+    /**
+     * Recursive functions used to get a point for a spark on the dial
+     */
     getPoint() {
         return __awaiter(this, void 0, void 0, function* () {
             const a = Math.random() * 2 * Math.PI;
@@ -106,15 +135,26 @@ export class Dim {
             }
         });
     }
-    // Can we do change lights with save and restore? What is more expensive?
+    /**
+     * Changes sx for lights
+     */
     changeLights() {
-        // Change the sx translation for both lights
         this.xLights1 < 2
             ? this.xLights1++
             : this.xLights1 = 0;
         this.xLights2 < 2
             ? this.xLights2++
             : this.xLights2 = 0;
+    }
+    /**
+     * Changes scale of image for win animation
+     */
+    changeScale() {
+        this.scale += 0.05 * this.scaleDir;
+        if (this.scale > 1.4)
+            this.scaleDir = -1;
+        if (this.scale <= 1)
+            this.scaleDir = +1;
     }
 }
 Dim.maxWidth = 916;
