@@ -1,4 +1,8 @@
 /**
+ * @author Simon Drake 2019
+ */
+
+/**
  * Class used for simple mathematics
  */
 export class Arithmetic {

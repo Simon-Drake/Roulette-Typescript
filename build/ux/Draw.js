@@ -1,3 +1,6 @@
+/**
+ * @author Simon Drake 2019
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -7,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Spark } from './Spark.js';
-import { Game } from './Game.js';
-import { Star } from './Star.js';
+import { Spark } from '../types/Spark.js';
+import { Game } from '../types/Game.js';
+import { Star } from '../types/Star.js';
 import { Dim } from './Dimensions.js';
-import { Arithmetic } from './Arithmetic.js';
+import { Arithmetic } from '../maths/Arithmetic.js';
 /**
  * Class related to drawing
  */
@@ -101,7 +104,7 @@ export class Draw {
             document.fonts.add(inst);
             Draw.fontsLoaded = true;
             // Once the fonts are loaded write instructions
-            Draw.writeWords(Dim.instFontSize);
+            Draw.writeWords();
         });
     }
     //---------- CLICK HANDLERS --------// 
@@ -130,8 +133,10 @@ export class Draw {
                 ? state = 0
                 : state = 1;
             Draw.spinWheel(Draw.currentRot, antiClockwise, -Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), Arithmetic.degToRadians(360 / 9 * Arithmetic.getRandomInt(9)), state);
+            // // Uncomment to test same wheel spin twice
+            // Draw.spinWheel(Draw.currentRot, antiClockwise, 0.7, 1.4, state)
             // Write spinning
-            Draw.writeWords(Dim.headrFontSize);
+            Draw.writeWords();
         }
     }
     /**
@@ -150,42 +155,42 @@ export class Draw {
      * Takes ImageData where and when necessary and stores it
      */
     static drawImages() {
-        Draw.ctx.drawImage(this.backg, 0, 0, Draw.dim.width, Draw.dim.height);
+        Draw.ctx.drawImage(Draw.backg, 0, 0, Draw.dim.width, Draw.dim.height);
         // Locals to improve readibility
-        const widthFactor = this.safe.width * Draw.dim.shrink;
-        const heightFactor = this.safe.height * Draw.dim.shrink;
+        const widthFactor = Draw.safe.width * Draw.dim.shrink;
+        const heightFactor = Draw.safe.height * Draw.dim.shrink;
         if (Draw.initialDraw) {
             let instructionsWidth = 800;
             let instructionsHeight = 90;
             Draw.behindSupp = Draw.ctx.getImageData(Draw.dim.ratios["supportDial"][0] * Draw.dim.width, Draw.dim.ratios["supportDial"][1] * Draw.dim.height, Draw.suppDial.width, Draw.suppDial.height);
             Draw.behindInst = Draw.ctx.getImageData(Draw.dim.ratios["instructions"][0] * Draw.dim.width, Draw.dim.ratios["instructions"][1] * Draw.dim.height, instructionsWidth, instructionsHeight);
             for (let i = 1; i <= 9; i++) {
-                Draw.behindSafes[`safe${i}`] = Draw.ctx.getImageData(Draw.dim.ratios[`safe${i}`][0] * Draw.dim.width, Draw.dim.ratios[`safe${i}`][1] * Draw.dim.height, widthFactor, heightFactor);
+                Draw.behindSafes[`safe${i}`] = Draw.ctx.getImageData(Draw.dim.ratios[`safe${i}`][0] * Draw.dim.width, Draw.dim.ratios[`safe${i}`][1] * Draw.dim.height, Draw.safe.width, Draw.safe.height);
             }
         }
         for (let i = 1; i <= 9; i++) {
             let s = "safe" + i.toString();
             Draw.game.unlockedSafes.indexOf(i) === -1
-                ? Draw.ctx.drawImage(this.safe, Draw.dim.ratios[s][0] * Draw.dim.width, Draw.dim.ratios[s][1] * Draw.dim.height, widthFactor, heightFactor)
+                ? Draw.ctx.drawImage(Draw.safe, Draw.dim.ratios[s][0] * Draw.dim.width, Draw.dim.ratios[s][1] * Draw.dim.height, widthFactor, heightFactor)
                 : Draw.openSafe(i);
         }
         if (Draw.game.state !== Game.states["WON"]) {
-            Draw.ctx.drawImage(this.suppDial, Draw.dim.ratios["supportDial"][0] * Draw.dim.width, Draw.dim.ratios["supportDial"][1] * Draw.dim.height, this.suppDial.width * Draw.dim.shrink, this.suppDial.height * Draw.dim.shrink);
-            Draw.ctx.drawImage(this.dial, 0, 0, Draw.dim.thirdDialW, this.dial.height, Draw.dim.ratios["dial"][0] * Draw.dim.width, Draw.dim.ratios["dial"][1] * Draw.dim.height, Draw.dim.thirdDialW * Draw.dim.shrink, this.dial.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.suppDial, Draw.dim.ratios["supportDial"][0] * Draw.dim.width, Draw.dim.ratios["supportDial"][1] * Draw.dim.height, Draw.suppDial.width * Draw.dim.shrink, Draw.suppDial.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.dial, 0, 0, Draw.dim.thirdDialW, Draw.dial.height, Draw.dim.ratios["dial"][0] * Draw.dim.width, Draw.dim.ratios["dial"][1] * Draw.dim.height, Draw.dim.thirdDialW * Draw.dim.shrink, Draw.dial.height * Draw.dim.shrink);
         }
         if (Draw.initialDraw) {
-            Draw.behindLight2 = Draw.ctx.getImageData(Draw.dim.ratios["lights2"][0] * Draw.dim.width, Draw.dim.ratios["lights2"][1] * Draw.dim.height, Draw.dim.thirdLightsW, this.lights.height);
-            Draw.behindLight1 = Draw.ctx.getImageData(Draw.dim.ratios["lights1"][0] * Draw.dim.width, Draw.dim.ratios["lights1"][1] * Draw.dim.height, Draw.dim.thirdLightsW, this.lights.height);
-            Draw.behindSpin = Draw.ctx.getImageData(Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, this.spin.width, this.spin.height);
+            Draw.behindLight2 = Draw.ctx.getImageData(Draw.dim.ratios["lights2"][0] * Draw.dim.width, Draw.dim.ratios["lights2"][1] * Draw.dim.height, Draw.dim.thirdLightsW, Draw.lights.height);
+            Draw.behindLight1 = Draw.ctx.getImageData(Draw.dim.ratios["lights1"][0] * Draw.dim.width, Draw.dim.ratios["lights1"][1] * Draw.dim.height, Draw.dim.thirdLightsW, Draw.lights.height);
+            Draw.behindSpin = Draw.ctx.getImageData(Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, Draw.spin.width, Draw.spin.height);
             Draw.behindMarker = Draw.ctx.getImageData(Draw.dim.ratios["marker"][0] * Draw.dim.width, Draw.dim.ratios["marker"][1] * Draw.dim.height, Draw.marker.width / 2, Draw.marker.height);
         }
         if (Draw.game.state !== Game.states["WON"]) {
-            Draw.ctx.drawImage(this.spin, Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, this.spin.width * Draw.dim.shrink, this.spin.height * Draw.dim.shrink);
-            Draw.ctx.drawImage(this.lights, 0, 0, Draw.dim.thirdLightsW, this.lights.height, Draw.dim.ratios["lights1"][0] * Draw.dim.width, Draw.dim.ratios["lights1"][1] * Draw.dim.height, Draw.dim.thirdLightsW * Draw.dim.shrink, this.lights.height * Draw.dim.shrink);
-            Draw.ctx.drawImage(this.lights, Draw.dim.thirdLightsW, 0, Draw.dim.thirdLightsW, this.lights.height, Draw.dim.ratios["lights2"][0] * Draw.dim.width, Draw.dim.ratios["lights2"][1] * Draw.dim.height, Draw.dim.thirdLightsW * Draw.dim.shrink, this.lights.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.spin, Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, Draw.spin.width * Draw.dim.shrink, Draw.spin.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.lights, 0, 0, Draw.dim.thirdLightsW, Draw.lights.height, Draw.dim.ratios["lights1"][0] * Draw.dim.width, Draw.dim.ratios["lights1"][1] * Draw.dim.height, Draw.dim.thirdLightsW * Draw.dim.shrink, Draw.lights.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.lights, Draw.dim.thirdLightsW, 0, Draw.dim.thirdLightsW, Draw.lights.height, Draw.dim.ratios["lights2"][0] * Draw.dim.width, Draw.dim.ratios["lights2"][1] * Draw.dim.height, Draw.dim.thirdLightsW * Draw.dim.shrink, Draw.lights.height * Draw.dim.shrink);
         }
         if (Draw.fontsLoaded) {
-            Draw.writeWords(Dim.instFontSize);
+            Draw.writeWords();
         }
         if (Draw.resizing || Draw.initialDraw) {
             // Sets dimensions with respect to the browser size
@@ -217,7 +222,7 @@ export class Draw {
         Draw.drawImages();
         Draw.winSpin(0, false);
         Draw.drawLights();
-        Draw.writeWords(Dim.winScrnFontSize);
+        Draw.writeWords();
         // Delete star if out of range
         // or update its position
         for (let i = 0; i < Draw.stars.length; i++) {
@@ -243,8 +248,8 @@ export class Draw {
         let s2x = Draw.dim.ratios[Draw.game.winSafesStrings[1]][0] * Draw.dim.width + Dim.priseXTrans * Draw.dim.shrink;
         let s2y = Draw.dim.ratios[Draw.game.winSafesStrings[1]][1] * Draw.dim.height + Dim.priseYTrans * Draw.dim.shrink;
         let scale = Draw.dim.scale;
-        Draw.ctx.drawImage(image, Draw.dim.winImageSX, 0, image.width / 2, image.height, s1x - image.width * (scale - 1) / 4, s1y - image.height * (scale - 1) / 2, scale * image.width * Draw.dim.shrink / 2, scale * image.height * Draw.dim.shrink);
-        Draw.ctx.drawImage(image, Draw.dim.winImageSX, 0, image.width / 2, image.height, s2x - image.width * (scale - 1) / 4, s2y - image.height * (scale - 1) / 2, scale * image.width * Draw.dim.shrink / 2, scale * image.height * Draw.dim.shrink);
+        Draw.ctx.drawImage(image, Draw.dim.winImageSX, 0, image.width / 2, image.height, s1x - image.width * Draw.dim.shrink * (scale - 1) / 4, s1y - image.height * Draw.dim.shrink * (scale - 1) / 2, scale * image.width * Draw.dim.shrink / 2, scale * image.height * Draw.dim.shrink);
+        Draw.ctx.drawImage(image, Draw.dim.winImageSX, 0, image.width / 2, image.height, s2x - image.width * Draw.dim.shrink * (scale - 1) / 4, s2y - image.height * Draw.dim.shrink * (scale - 1) / 2, scale * image.width * Draw.dim.shrink / 2, scale * image.height * Draw.dim.shrink);
         if (Draw.dim.winImageSX > 0) {
             Draw.drawMultiplier(Draw.game.boxes[Draw.game.winSafes[0]], Draw.game.winSafesStrings[0]);
             Draw.drawMultiplier(Draw.game.boxes[Draw.game.winSafes[1]], Draw.game.winSafesStrings[1]);
@@ -257,7 +262,7 @@ export class Draw {
      * @param safe Where to write it
      */
     static drawMultiplier(multiple, safe) {
-        let fontSize = 65 * Draw.dim.shrink;
+        let fontSize = 65 * Draw.dim.shrink * Draw.dim.scale;
         let scaledFont = fontSize * Draw.dim.scale;
         Draw.ctx.font = `${fontSize}px unlocked`;
         let blackfx = Draw.dim.ratios[safe][0] * Draw.dim.width + Dim.fontXTrans * Draw.dim.shrink - Dim.blackFont * Draw.dim.shrink;
@@ -283,49 +288,50 @@ export class Draw {
      * Uses a switch case to decide what to write
      * @param fSize font size
      */
-    static writeWords(fSize) {
-        let fontSize = fSize * Draw.dim.shrink;
-        Draw.ctx.font = `${fontSize}px instructions`;
+    static writeWords() {
         switch (Draw.game.state) {
             case Game.states["ZERO_SPINS"]: {
+                Draw.ctx.font = `${Dim.instFontSize * Draw.dim.shrink}px instructions`;
                 Draw.drawScreen();
                 Draw.ctx.fillText('Match a pair of symbols for a safe busting multiplier!', Draw.dim.ratios["instructionsTop"][0] * Draw.dim.width, Draw.dim.ratios["instructionsTop"][1] * Draw.dim.height);
                 Draw.ctx.fillText('TOUCH THE DIAL TO SPIN YOUR 4 DIGIT COMBINATION', Draw.dim.ratios["instructionsBottom"][0] * Draw.dim.width, Draw.dim.ratios["instructionsBottom"][1] * Draw.dim.height);
-                Draw.ctx.font = `${fontSize}px unlocked`;
+                Draw.ctx.font = `${Dim.instFontSize * Draw.dim.shrink}px unlocked`;
                 Draw.ctx.fillText("-   -   -   -", Draw.dim.ratios["unlockedSafes"][0] * Draw.dim.width, Draw.dim.ratios["unlockedSafes"][1] * Draw.dim.height);
                 break;
             }
             case Game.states["SPINNING"]: {
+                Draw.ctx.font = `${Dim.headrFontSize * Draw.dim.shrink}px instructions`;
                 Draw.drawBehindInst();
                 Draw.ctx.fillText('SPINNING!', Draw.dim.ratios["spinning"][0] * Draw.dim.width, Draw.dim.ratios["spinning"][1] * Draw.dim.height);
                 break;
             }
             case Game.states["SPUN"]: {
-                Draw.writeSPUNstate(fontSize);
+                Draw.writeSPUNstate();
                 break;
             }
             case Game.states["ANIMATING"]: {
-                Draw.writeSPUNstate(fontSize);
+                Draw.writeSPUNstate();
                 break;
             }
             case Game.states["WON"]: {
                 Draw.ctx.drawImage(Draw.winScr, Draw.dim.ratios["winScreen"][0] * Draw.dim.width, Draw.dim.ratios["winScreen"][1] * Draw.dim.height, Draw.winScr.width * Draw.dim.shrink, Draw.winScr.height * Draw.dim.shrink);
-                Draw.ctx.font = `${fontSize}px unlocked`;
+                Draw.ctx.font = `${Dim.winScrnFontSize * Draw.dim.shrink}px unlocked`;
                 Draw.ctx.fillText("WIN", Draw.dim.ratios["winText"][0] * Draw.dim.width, Draw.dim.ratios["winText"][1] * Draw.dim.height);
                 Draw.ctx.font = `${Dim.headrFontSize * Draw.dim.shrink}px instructions`;
                 let amountWon = Draw.game.boxes[Draw.game.winSafes[0]] * Game.bet;
-                Draw.ctx.fillText(`YOU WIN £${amountWon}!`, Draw.dim.ratios["safeText"][0] * Draw.dim.width, Draw.dim.ratios["safeText"][1] * Draw.dim.height);
+                Draw.ctx.fillText(`YOU WIN £${amountWon}!`, Draw.dim.ratios["youWinText"][0] * Draw.dim.width, Draw.dim.ratios["youWinText"][1] * Draw.dim.height);
                 break;
             }
             case Game.states["LOST"]: {
                 Draw.ctx.fillStyle = 'black';
+                Draw.ctx.font = `${Dim.headrFontSize * Draw.dim.shrink}px instructions`;
                 Draw.ctx.fillText(`NO LUCK THIS TIME!`, Draw.dim.ratios["noLuckText"][0] * Draw.dim.width -
                     Dim.blackFont * Draw.dim.shrink, Draw.dim.ratios["noLuckText"][1] * Draw.dim.height +
                     Dim.blackFont * Draw.dim.shrink);
                 Draw.ctx.fillStyle = 'white';
                 Draw.ctx.font = `${Dim.replayFontSize * Draw.dim.shrink}px instructions`;
-                Draw.ctx.fillText(`Click to replay`, Draw.dim.ratios["replayText"][0], Draw.dim.ratios["replayText"][1]);
-                Draw.ctx.font = `${fontSize * Draw.dim.shrink}px instructions`;
+                Draw.ctx.fillText(`Click to replay`, Draw.dim.ratios["replayText"][0] * Draw.dim.width, Draw.dim.ratios["replayText"][1] * Draw.dim.height);
+                Draw.ctx.font = `${Dim.headrFontSize * Draw.dim.shrink}px instructions`;
                 Draw.ctx.fillText(`NO LUCK THIS TIME!`, Draw.dim.ratios["noLuckText"][0] * Draw.dim.width, Draw.dim.ratios["noLuckText"][1] * Draw.dim.height);
                 break;
             }
@@ -336,9 +342,9 @@ export class Draw {
      * Improves readability + DRY
      * @param fontSize font size
      */
-    static writeSPUNstate(fontSize) {
+    static writeSPUNstate() {
         Draw.drawBehindInst();
-        Draw.ctx.font = `${fontSize * Draw.dim.shrink}px instructions`;
+        Draw.ctx.font = `${Dim.headrFontSize * Draw.dim.shrink}px instructions`;
         Draw.ctx.fillText("SAFE" + Draw.game.result.toString(), Draw.dim.ratios["safeText"][0] * Draw.dim.width, Draw.dim.ratios["safeText"][1] * Draw.dim.height);
         Draw.drawScreen();
         Draw.ctx.font = `${Dim.instFontSize * Draw.dim.shrink}px unlocked`;
@@ -397,8 +403,8 @@ export class Draw {
         Draw.ctx.beginPath();
         Draw.ctx.arc(Draw.dim.centrDial[0], Draw.dim.centrDial[1], Draw.dim.radiusSupport + 25 * Draw.dim.shrink, 0, Math.PI * 2);
         Draw.ctx.clip();
-        Draw.ctx.drawImage(this.backg, 0, 0, Draw.dim.width, Draw.dim.height);
-        Draw.ctx.drawImage(this.suppDial, Draw.dim.ratios["supportDial"][0] * Draw.dim.width, Draw.dim.ratios["supportDial"][1] * Draw.dim.height, this.suppDial.width * Draw.dim.shrink, this.suppDial.height * Draw.dim.shrink);
+        Draw.ctx.drawImage(Draw.backg, 0, 0, Draw.dim.width, Draw.dim.height);
+        Draw.ctx.drawImage(Draw.suppDial, Draw.dim.ratios["supportDial"][0] * Draw.dim.width, Draw.dim.ratios["supportDial"][1] * Draw.dim.height, Draw.suppDial.width * Draw.dim.shrink, Draw.suppDial.height * Draw.dim.shrink);
         // Drawlights needed twice because we clip
         Draw.drawLights();
         Draw.ctx.restore();
@@ -450,18 +456,19 @@ export class Draw {
  */
     static mapMultiplierToImage(multiplier) {
         switch (multiplier) {
-            // case 11 : {
-            //     return Draw.coin
-            // }
-            // case 12 : {
-            //     return Draw.coin
-            // }
-            // case 13 : {
-            //     return Draw.coin
-            // }
-            // case 14 : {
-            //     return Draw.coin
-            // }
+            // Uncomment to test lose scenario
+            case 11: {
+                return Draw.coin;
+            }
+            case 12: {
+                return Draw.coin;
+            }
+            case 13: {
+                return Draw.coin;
+            }
+            case 14: {
+                return Draw.coin;
+            }
             case 15: {
                 return Draw.coin;
             }
@@ -488,10 +495,10 @@ export class Draw {
     static rotate(rotation, xTranslate) {
         Draw.ctx.translate(Draw.dim.centrDial[0], Draw.dim.centrDial[1]);
         Draw.ctx.rotate(rotation);
-        Draw.ctx.drawImage(this.dial, xTranslate, 0, Draw.dim.thirdDialW, this.dial.height, Draw.dim.ratios["dial"][0] * Draw.dim.width - Draw.dim.centrDial[0], Draw.dim.ratios["dial"][1] * Draw.dim.height - Draw.dim.centrDial[1], Draw.dim.thirdDialW * Draw.dim.shrink, this.dial.height * Draw.dim.shrink);
+        Draw.ctx.drawImage(Draw.dial, xTranslate, 0, Draw.dim.thirdDialW, Draw.dial.height, Draw.dim.ratios["dial"][0] * Draw.dim.width - Draw.dim.centrDial[0], Draw.dim.ratios["dial"][1] * Draw.dim.height - Draw.dim.centrDial[1], Draw.dim.thirdDialW * Draw.dim.shrink, Draw.dial.height * Draw.dim.shrink);
         Draw.ctx.setTransform(1, 0, 0, 1, 0, 0);
         if (Draw.spinOn) {
-            Draw.ctx.drawImage(this.spin, Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, this.spin.width * Draw.dim.shrink, this.spin.height * Draw.dim.shrink);
+            Draw.ctx.drawImage(Draw.spin, Draw.dim.ratios["spin"][0] * Draw.dim.width, Draw.dim.ratios["spin"][1] * Draw.dim.height, Draw.spin.width * Draw.dim.shrink, Draw.spin.height * Draw.dim.shrink);
         }
     }
     /**
@@ -593,16 +600,18 @@ export class Draw {
         if (Draw.game.unlockedSafes.indexOf(Draw.game.result) === -1) {
             Draw.game.unlockedSafes.push(Draw.game.result);
             Draw.openSafe(Draw.game.result);
+            Draw.game.state = Game.states["ANIMATING"];
             // If win implement it with a delay otherwise display redDial animation
             Draw.game.assessWin(Draw.game.boxes[Draw.game.result])
                 ? setTimeout(function () { Draw.implementWin(); }, 2000)
                 : Draw.redDial(0);
         }
         else {
+            Draw.game.state = Game.states["SPUN"];
             Draw.glowInterv = setInterval(Draw.generateSparks, 450);
             Draw.flashInterv = setInterval(Draw.flashSpin, 500);
         }
-        Draw.writeWords(Dim.headrFontSize);
+        Draw.writeWords();
     }
     /**
      * Uses counter to determine what part of dial to display and when to stop animation
@@ -610,7 +619,6 @@ export class Draw {
      * @param counter integer counter
      */
     static redDial(counter) {
-        Draw.game.state = Game.states["ANIMATING"];
         if (counter == 10) {
             // 4 spins marks a loss
             if (Draw.game.spins >= 4) {
@@ -621,7 +629,7 @@ export class Draw {
                 Draw.game.state = Game.states["SPUN"];
                 Draw.glowInterv = setInterval(Draw.generateSparks, 450);
                 Draw.flashInterv = setInterval(Draw.flashSpin, 500);
-                Draw.writeWords(110);
+                Draw.writeWords();
             }
         }
         else {
@@ -718,7 +726,7 @@ export class Draw {
         Draw.ctx.fillRect(Draw.dim.width / 4, Draw.dim.height / 3 + 3, Draw.dim.width / 2, Draw.dim.height / 3);
         Draw.ctx.fillStyle = `rgb(64, 64, 64)`;
         Draw.ctx.fillRect(Draw.dim.width / 4 + 1, Draw.dim.height / 3 - 1, Draw.dim.width / 2, Draw.dim.height / 3);
-        Draw.writeWords(110);
+        Draw.writeWords();
     }
 }
 /**

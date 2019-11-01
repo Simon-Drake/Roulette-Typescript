@@ -1,3 +1,6 @@
+/**
+ * @author Simon Drake 2019
+ */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -48,14 +51,15 @@ export class Dim {
             "spinning": [(270 / Dim.maxWidth), (115 / Dim.maxHeight)],
             "noLuckText": [(100 / Dim.maxWidth), (115 / Dim.maxHeight)],
             "safeText": [(333 / Dim.maxWidth), (115 / Dim.maxHeight)],
-            "replayText": [(290 / Dim.maxWidth), (330 / Dim.maxHeight)],
+            "replayText": [(285 / Dim.maxWidth), (330 / Dim.maxHeight)],
             "instructions": [(65 / Dim.maxWidth), (30 / Dim.maxHeight)],
             "instructionsTop": [(68 / Dim.maxWidth), (65 / Dim.maxHeight)],
             "instructionsBottom": [(68 / Dim.maxWidth), (110 / Dim.maxHeight)],
             "panelBackground": [(31 / Dim.maxWidth), (12 / Dim.maxHeight)],
             "screenBackground": [(600 / Dim.maxWidth), (186 / Dim.maxHeight)],
             "unlockedSafes": [(642 / Dim.maxWidth), (243 / Dim.maxHeight)],
-            "winText": [(662 / Dim.maxWidth), (253 / Dim.maxHeight)]
+            "winText": [(662 / Dim.maxWidth), (253 / Dim.maxHeight)],
+            "youWinText": [(200 / Dim.maxWidth), (115 / Dim.maxHeight)]
         };
         Dim.canvasEl = el;
     }

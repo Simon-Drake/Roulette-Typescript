@@ -1,3 +1,7 @@
+/**
+ * @author Simon Drake 2019
+ */
+
 
 import {Arithmetic} from '../maths/Arithmetic.js'
 

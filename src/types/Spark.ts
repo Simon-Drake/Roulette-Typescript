@@ -1,4 +1,8 @@
 /**
+ * @author Simon Drake 2019
+ */
+
+/**
  * Spark object for support dial
  */
 export class Spark{

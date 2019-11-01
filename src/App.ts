@@ -1,6 +1,9 @@
+/**
+ * @author Simon Drake 2019
+ */
+
 import {Draw} from './ux/Draw.js'
 import {Game} from './types/Game.js'
-
 
 /**
  * Main class which initialised the app and runs animation frame

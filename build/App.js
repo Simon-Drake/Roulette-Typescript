@@ -1,19 +1,29 @@
+/**
+ * @author Simon Drake 2019
+ */
 import { Draw } from './ux/Draw.js';
-import { Game } from './ux/Game.js';
+import { Game } from './types/Game.js';
+/**
+ * Main class which initialised the app and runs animation frame
+ */
 export class App {
-    // insert access modifiers
-    // take away static?
+    /**
+     * Initialising method
+     */
     static init() {
         // initiate game and pass to canvas
         App.game = new Game();
         Draw.init(document.querySelector("canvas"), App.game);
     }
-    static gameLoop(timestamp) {
-        if (App.game.state == Game.states["LOST"]) {
-        }
-        App.timeElapsed = timestamp;
+    /**
+     * Game loop
+     */
+    static gameLoop() {
         requestAnimationFrame(App.gameLoop);
     }
 }
+/**
+ * Main method
+ */
 App.init();
 requestAnimationFrame(App.gameLoop);
